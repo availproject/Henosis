@@ -8,3 +8,8 @@ methods = { path = "../methods" }
 risc0-zkvm = { version = "0.20.1" }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 serde = "1.0"
+bonsai-sdk = "0.6.1"
+bytemuck = "1.14.0"
+anyhow = "1.0.79"
+hex = "0.4.3"
+bincode = "1.3.3"
