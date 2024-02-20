@@ -9,9 +9,6 @@ use anyhow::Result;
 use bonsai_sdk::alpha as bonsai_sdk;
 
 fn main() {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
-        .init();
 
     let input_data: u64 = 10;
   
