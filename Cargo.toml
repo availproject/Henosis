@@ -1,8 +1,17 @@
-[package]
-name = "henosis"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "2"
+members = ["host", "methods", "plonk_verifier"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# Always optimize; building and running the guest takes much longer without optimization.
+[profile.dev]
+opt-level = 3
 
-[dependencies]
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.release]
+debug = 1
+lto = true
+
+[profile.release.build-override]
+opt-level = 3
