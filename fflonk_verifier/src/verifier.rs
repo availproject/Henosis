@@ -190,8 +190,27 @@ pub fn get_domain_size() -> Fp256<FrParameters> {
     Fr::from_str("16777216").unwrap()
 }
 
+pub fn get_pubSignals() -> Fp256<FrParameters> {
+    Fr::from_str("14516932981781041565586298118536599721399535462624815668597272732223874827152").unwrap()
+}
 
-pub fn calculateInversions(y : Fp256<FrParameters>, xi: Fp256<FrParameters> , zhInv: Fp256<FrParameters> , h0w8:Vec<Fp256<FrParameters>>  ,h1w4: Vec<Fp256<FrParameters>>, h2w3: Vec<Fp256<FrParameters>>, h3w3: Vec<Fp256<FrParameters>>) {
+
+pub fn computeLagrange(zh: Fp256<FrParameters>, eval_l1: Fp256<FrParameters>) -> Fp256<FrParameters>{
+
+    let w = Fr::from_str("1").unwrap();
+    eval_l1.mul(zh)
+}
+
+pub fn computePi(pubSignals: Fp256<FrParameters>, eval_l1: Fp256<FrParameters>) -> Fp256<FrParameters>{
+    let pi = Fr::from_str("0").unwrap();
+
+    let q= Fr::from_str("21888242871839275222246405745257275088548364400416034343698204186575808495617").unwrap();
+
+    q.add(pi.sub(eval_l1.mul(pubSignals)))
+}
+
+
+pub fn calculateInversions(y : Fp256<FrParameters>, xi: Fp256<FrParameters> , zhInv: Fp256<FrParameters> , h0w8:Vec<Fp256<FrParameters>>  ,h1w4: Vec<Fp256<FrParameters>>, h2w3: Vec<Fp256<FrParameters>>, h3w3: Vec<Fp256<FrParameters>>) -> Fp256<FrParameters>{
     let mut w = y.sub(h1w4[0]).mul(y.sub(h1w4[1]).mul(y.sub(h1w4[2]).mul(y.sub(h1w4[3]))));
     println!("w: {}", (w));
 
@@ -208,15 +227,17 @@ pub fn calculateInversions(y : Fp256<FrParameters>, xi: Fp256<FrParameters> , zh
     let mut li_s1_inv = computeLiS1(y, h1w4);
 
     let mut li_s2_inv = computeLiS2(y, xi,  h2w3, h3w3);
+    // println!()
 
     w = Fr::from_str("1").unwrap();
 
-    let eval_l1 = get_domain_size().mul(xi.sub(w));
+    let mut eval_l1 = get_domain_size().mul(xi.sub(w));
 
-    inverseArray(denH1, denH2, zhInv, li_s0_inv, li_s1_inv, li_s2_inv, eval_l1);
+    println!("eval_l1: {}", eval_l1);
 
-    let hex_value = "0x1af638185408dfa5b1470887ab5bf38a7363f6c26479828ab16eb45219715936"; // Your hex value
-    let u256_value = U256::from_str(hex_value).expect("Invalid hex value");
+    inverseArray(denH1, denH2, zhInv, li_s0_inv, li_s1_inv, li_s2_inv, &mut eval_l1);
+
+    eval_l1
 
 }
 
@@ -318,9 +339,9 @@ pub fn computeLiS2(y : Fp256<FrParameters>, xi:Fp256<FrParameters> ,h2w3: Vec<Fp
 
 
 
-pub fn inverseArray(denH1: Fp256<FrParameters>, denH2: Fp256<FrParameters>, zhInv: Fp256<FrParameters> ,li_s0_inv: [Fp256<FrParameters>; 8], li_s1_inv: [Fp256<FrParameters>; 4], li_s2_inv: [Fp256<FrParameters>; 6], eval_l1: Fp256<FrParameters>) {
+pub fn inverseArray(denH1: Fp256<FrParameters>, denH2: Fp256<FrParameters>, zhInv: Fp256<FrParameters> ,li_s0_inv: [Fp256<FrParameters>; 8], li_s1_inv: [Fp256<FrParameters>; 4], li_s2_inv: [Fp256<FrParameters>; 6], eval_l1: &mut Fp256<FrParameters>) {
 
-    let mut local_eval_l1 = eval_l1.clone();
+    // let mut local_eval_l1 = eval_l1.clone();
     let mut local_den_h1 = denH1.clone();
     let mut local_den_h2 = denH2.clone();
     let mut local_zh_inv = zhInv.clone();
@@ -328,62 +349,87 @@ pub fn inverseArray(denH1: Fp256<FrParameters>, denH2: Fp256<FrParameters>, zhIn
     let mut local_li_s1_inv = li_s1_inv.clone();
     let mut local_li_s2_inv = li_s2_inv.clone();
 
+    let mut _acc: Vec<Fp256<FrParameters>> = Vec::new();
+
     let mut acc = zhInv.mul(denH1).mul(denH2);
+    _acc.push(acc.clone());
+    let mut temp_acc = Fr::from_str("1").unwrap();
     for i in 0..8{
         acc = acc.mul(local_li_s0_inv[i]);
+        _acc.push(acc);
     }
     for i in 0..4{
         acc = acc.mul(local_li_s1_inv[i]);
+        _acc.push(acc);
     }
     for i in 0..6{
         acc = acc.mul(local_li_s2_inv[i]);
+        _acc.push(acc);
+        if i==5{
+            temp_acc = acc.clone();
+        }
     }
-    acc = acc.mul(local_eval_l1);
-    println!("acc: {}", acc);
+    acc = acc.mul(eval_l1.clone());
+    _acc.push(acc);
+    // println!("acc: {}", acc);
+    // println!("acc wala xeval_l1: {}", eval_l1);
 
     let mut inv = get_proof().eval_inv;
 
-    println!("inv: {}", inv);
+    // println!("inv: {}", inv);
 
     let check = inv.mul(acc);
+    // println!("check: {}", check);
     assert!(check == Fr::one());
 
     acc = inv.clone();
 
-    inv = acc.mul(local_eval_l1);
-    acc = acc.mul(local_eval_l1);
-    local_eval_l1 = inv;
+    _acc.pop();
+    inv = acc.mul(_acc.last().unwrap().clone());
+    acc = acc.mul(eval_l1.clone());
+    *eval_l1 = inv;
+    println!("herer eval_l1: {}", eval_l1);
 
     for i in (0..6).rev(){
-        inv = acc.mul(local_li_s2_inv[i]);
+        _acc.pop();
+        inv = acc.mul(_acc.last().unwrap().clone());
         acc = acc.mul(local_li_s2_inv[i]);
         local_li_s2_inv[i] = inv;
     }
+    // println!("local_li_s2_inv_0: {}", local_li_s2_inv[0]);
 
     for i in (0..4).rev(){
-        inv = acc.mul(local_li_s1_inv[i]);
+        _acc.pop();
+        inv = acc.mul(_acc.last().unwrap().clone());
         acc = acc.mul(local_li_s1_inv[i]);
         local_li_s1_inv[i] = inv;
     }
 
+    // println!("local_li_s1_inv_0: {}", local_li_s1_inv[0]);
+
     for i in (0..8).rev(){
-        inv = acc.mul(local_li_s0_inv[i]);
+        _acc.pop();
+        inv = acc.mul(_acc.last().unwrap().clone());
         acc = acc.mul(local_li_s0_inv[i]);
         local_li_s0_inv[i] = inv;
     }
 
-    inv = acc.mul(denH2);
+    // println!("local_li_s0_inv_0: {}", local_li_s0_inv[0]);
+
+    _acc.pop();
+    inv = acc.mul(_acc.last().unwrap().clone());
     acc = acc.mul(denH2);
     local_den_h2 = inv;
 
-    inv = acc.mul(denH1);
+    _acc.pop();
+    inv = acc.mul(_acc.last().unwrap().clone());
     acc = acc.mul(denH1);
     local_den_h1 = inv;
 
     
     local_zh_inv = acc;
 
-    println!("local_zh_inv: {}", local_zh_inv);
+    // println!("local_zh_inv: {}", local_zh_inv);
 }
 
 
@@ -421,6 +467,10 @@ pub fn verify() {
         "10393185035615259318552712605767090377249145892581385744729012713520677048218",
     ).unwrap();
 
+    let zh: Fp256<FrParameters> = Fr::from_str(
+        "8663234610000964594764035144827003258323335914482598945994186647593190381653",
+    ).unwrap();
+
     let zhinv: Fp256<FrParameters> = Fr::from_str(
         "8663234610000964594764035144827003258323335914482598945994186647593190381653",
     ).unwrap();
@@ -455,9 +505,14 @@ pub fn verify() {
         Fr::from_str("18372698687274153369494951384037082866321780135164467086308401535543892421146").unwrap(),
     ];
 
+    let mut eval_l1 = calculateInversions(y,xi,zhinv,  h0w8, h1w4, h2w3, h3w3);
+    println!("eval_l1: {}", eval_l1);
 
-    
+    eval_l1 = computeLagrange(zh, eval_l1);
 
-    calculateInversions(y,xi,zhinv,  h0w8, h1w4, h2w3, h3w3);
+    println!("Final lagrange eval_l1: {}", eval_l1);
+
+    // computePi(get_pubSignals(), eval_l1);
+
     println!("Verifying proof...");
 }
