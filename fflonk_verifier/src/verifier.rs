@@ -495,35 +495,4 @@ fn calculateR2(xi: Fp256<FrParameters>, gamma: Fp256<FrParameters>, beta: Fp256<
     gamma_r2 = gamma_r2.add(c2Value.mul(num.mul(pLiS2Inv_160_term)));
     
     println!("gamma_r2 5: {:?}", gamma_r2.to_string());
-
-
-    
-
-
-    // num2 = 
-    // num_r2_term
-    // num2_r2_term
-    // betaxi_term
-    // gamma_term
-    // t2_term
-    // t1_r2
-    // t1_xi_term
-    // pH2w3_0_term
-    // pLiS2Inv_0_term
-    // pH2w3_1_term
-    // pLiS2Inv_32_term
-    // pH2w3_2_term
-    // pLiS2Inv_64_term
-    // pH3w3_0_term
-    // pLiS2Inv_96_term
-    // pH3w3_1_term
-    // pLiS2Inv_128_term
-    // pH3w3_2_term
-    // pLiS2Inv_160_term
-
-
-
-
-
-
 }
