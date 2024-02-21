@@ -4,3 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ark-bn254 = "0.3.0"
+ark-ec = "0.3.0"
+ark-ff = "0.3.0"
+ark-poly = "0.3.0"
+num-bigint = "0.4.4"
+
+
+[[example]]
+name = "simple_verification"
+path = "src/example/simple_verification.rs"
