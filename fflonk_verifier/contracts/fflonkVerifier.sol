@@ -171,10 +171,55 @@ contract FflonkVerifier {
     
     
     uint16 constant lastMem = 1920;
+
+    uint public Beta;
+    uint public Gamma;
+    uint public Y;
+    uint public Xi;
+    uint public XiSeed;
+    uint public XiSeed2;
+    uint public Alpha;
+
+    uint256 public h0w8_0;
+    uint256 public h0w8_1;
+    uint256 public h0w8_2;
+    uint256 public h0w8_3;
+    uint256 public h0w8_4;
+    uint256 public h0w8_5;
+    uint256 public h0w8_6;
+    uint256 public h0w8_7;
+
+    uint256 public h1w4_0;
+    uint256 public h1w4_1;
+    uint256 public h1w4_2;
+    uint256 public h1w4_3;
+
+    uint256 public h2w3_0;
+    uint256 public h2w3_1;
+    uint256 public h2w3_2;
+
+    uint256 public h3w3_0;
+    uint256 public h3w3_1;
+    uint256 public h3w3_2;
+    
+    uint256 public W;
+
+    uint256 public lastlis0inv;
+    uint256 public lastlis1inv;
+    uint256 public Root0;
+    uint256 public Den1;
+    uint256 public Den2;
+    uint256 public Den3;
+    uint256 public Temp;
+    uint256 public lis2inv;
+
+
+
      
-// ["0x1af638185408dfa5b1470887ab5bf38a7363f6c26479828ab16eb45219715936",       "0x2b129ebcbf22e11bb2442800922bf1c9979bb7a6c895e17411325e6a1c195912",       "0x0098d7bc29d322c680263a7dba99490333dd42aeafc4ca99f870288f1052cd86",       "0x11c911bfb298b409c74838c0a3c16f7171dac07cddaba283e36090eef091d67f",       "0x29c8c4c86c9d63a57e65dcef548f50c06ce41ffcaadf21f279f66a9f6b59f619",       "0x01eb8b4841e587df317141dd2c198d0160eb974c34dd303f75b27cdac46ce887",       "0x220c39420aa977359e2f2fb3c5d7b9b28a23a7f0c78d6b215d4178d3f2b1ba72",       "0x045c6d18f3e18cc4aac314316a47f0010ba8b1035b7dab678933e5bcd248f72b",       "0x1cc4edb75ac4f07466f70f097d263bad6ca1e1e506bccbccd7de94b39dd3a05e",      "0x0e11ad74cead5ed3d142083b8ad873acf20cb6e39059d88e61a84982386a698a",       "0x23806e3836d9fb0467b1ade5a51564aeda10cc9b97f596456cafa149f6c9bfbb",       "0x1aec381b720257b672376b5ccbd1fe787247e3cc7b2c6ec2d171be1c5c1a5837",       "0x038d7d45919eee4e6c7e47c586b1d55e32d102e56d64513575d94a9aeba30241",       "0x1ba4459cca4bb8b75808d4f38598e4b6cf6a8577f7294def8e85b5955abc681a",         "0x300239f087b7a581948dc4b14cdc9d5ae13ba8a9cbf56998f764ba13549ac6fa",         "0x104d55e131742e10144e0c9023635ee7e000de29d76c05ad56f6a74e40ac9924",         "0x177d85cc56ecaac98dc3c835668105f9ff8311a73767f7ba145d443af8d00999",         "0x1bd5b487cf64d1973cdfbcf8587319d681ab87e595ef347d68067418cca5368f",         "0x27144e4b99a6508fecc7b0fdc1a64d4be4760a1035730e29a907dd091c6b95ac",         "0x1e8841cdf20050bfe02cbeb022b26960e8b544774112e09a21a440c8bba503d3",         "0x15273dd6fecfedef5adde005a7ab5ee48a7eefdaa85ef4e356d0f3dcd92bcb64",         "0x267735dcdbd34c8c5f8cf864f3990e078d26a928a54c27485133b6d0678cda9b",         "0x1a193153f3cf956d68aab8afe447f0f6ba985f40edba7d9375b9368f1c55f31b",         "0x0e1a49d180902645b8954552c99af04aed9315725b32ac2623965f887a7a5849"]
+// myproof ["0x1af638185408dfa5b1470887ab5bf38a7363f6c26479828ab16eb45219715936",       "0x2b129ebcbf22e11bb2442800922bf1c9979bb7a6c895e17411325e6a1c195912",       "0x0098d7bc29d322c680263a7dba99490333dd42aeafc4ca99f870288f1052cd86",       "0x11c911bfb298b409c74838c0a3c16f7171dac07cddaba283e36090eef091d67f",       "0x29c8c4c86c9d63a57e65dcef548f50c06ce41ffcaadf21f279f66a9f6b59f619",       "0x01eb8b4841e587df317141dd2c198d0160eb974c34dd303f75b27cdac46ce887",       "0x220c39420aa977359e2f2fb3c5d7b9b28a23a7f0c78d6b215d4178d3f2b1ba72",       "0x045c6d18f3e18cc4aac314316a47f0010ba8b1035b7dab678933e5bcd248f72b",       "0x1cc4edb75ac4f07466f70f097d263bad6ca1e1e506bccbccd7de94b39dd3a05e",      "0x0e11ad74cead5ed3d142083b8ad873acf20cb6e39059d88e61a84982386a698a",       "0x23806e3836d9fb0467b1ade5a51564aeda10cc9b97f596456cafa149f6c9bfbb",       "0x1aec381b720257b672376b5ccbd1fe787247e3cc7b2c6ec2d171be1c5c1a5837",       "0x038d7d45919eee4e6c7e47c586b1d55e32d102e56d64513575d94a9aeba30241",       "0x1ba4459cca4bb8b75808d4f38598e4b6cf6a8577f7294def8e85b5955abc681a",         "0x300239f087b7a581948dc4b14cdc9d5ae13ba8a9cbf56998f764ba13549ac6fa",         "0x104d55e131742e10144e0c9023635ee7e000de29d76c05ad56f6a74e40ac9924",         "0x177d85cc56ecaac98dc3c835668105f9ff8311a73767f7ba145d443af8d00999",         "0x1bd5b487cf64d1973cdfbcf8587319d681ab87e595ef347d68067418cca5368f",         "0x27144e4b99a6508fecc7b0fdc1a64d4be4760a1035730e29a907dd091c6b95ac",         "0x1e8841cdf20050bfe02cbeb022b26960e8b544774112e09a21a440c8bba503d3",         "0x15273dd6fecfedef5adde005a7ab5ee48a7eefdaa85ef4e356d0f3dcd92bcb64",         "0x267735dcdbd34c8c5f8cf864f3990e078d26a928a54c27485133b6d0678cda9b",         "0x1a193153f3cf956d68aab8afe447f0f6ba985f40edba7d9375b9368f1c55f31b",         "0x0e1a49d180902645b8954552c99af04aed9315725b32ac2623965f887a7a5849"]
+
 // [14516932981781041565586298118536599721399535462624815668597272732223874827152]
-    function verifyProof(bytes32[24] calldata proof, uint256[1] calldata pubSignals) public view returns (bool) {
+    function verifyProof(bytes32[24] calldata proof, uint256[1] calldata pubSignals) public returns (bool) {
         assembly {
             // Computes the inverse of an array of values
             // See https://vitalik.ca/general/2018/07/21/starks_part_3.html in section where explain fields operations
@@ -537,11 +582,45 @@ contract FflonkVerifier {
                 mstore(add(pMem, 1952 ),  calldataload(pW1))
                 mstore(add(pMem, 1984 ),  calldataload(add(pW1, 32)))
                 mstore(add(pMem, pY), mod(keccak256(add(pMem, lastMem), 96), q))
+
+                sstore(Beta.slot, mload(add(pMem,pBeta)))
+                sstore(Gamma.slot, mload(add(pMem,pGamma)))
+                sstore(XiSeed.slot, mload(add(pMem, pXiSeed)))
+                sstore(XiSeed2.slot, mload(add(pMem, pXiSeed2)))
+                sstore(Xi.slot, mload(add(pMem, pXi)))
+                sstore(Alpha.slot, mload(add(pMem, pAlpha)))
+
+                sstore(h0w8_0.slot, mload(add(pMem, pH0w8_0)))
+                sstore(h0w8_1.slot, mload(add(pMem, pH0w8_1)))
+                sstore(h0w8_2.slot, mload(add(pMem, pH0w8_2)))
+                sstore(h0w8_3.slot, mload(add(pMem, pH0w8_3)))
+                sstore(h0w8_4.slot, mload(add(pMem, pH0w8_4)))
+                sstore(h0w8_5.slot, mload(add(pMem, pH0w8_5)))
+                sstore(h0w8_6.slot, mload(add(pMem, pH0w8_6)))
+                sstore(h0w8_7.slot, mload(add(pMem, pH0w8_7)))
+
+                sstore(h1w4_0.slot, mload(add(pMem, pH1w4_0)))
+                sstore(h1w4_1.slot, mload(add(pMem, pH1w4_1)))
+                sstore(h1w4_2.slot, mload(add(pMem, pH1w4_2)))
+                sstore(h1w4_3.slot, mload(add(pMem, pH1w4_3)))
+
+                sstore(h2w3_0.slot, mload(add(pMem, pH2w3_0)))
+                sstore(h2w3_1.slot, mload(add(pMem, pH2w3_1)))
+                sstore(h2w3_2.slot, mload(add(pMem, pH2w3_2)))
+                
+                sstore(h3w3_0.slot, mload(add(pMem, pH3w3_0)))
+                sstore(h3w3_1.slot, mload(add(pMem, pH3w3_1)))
+                sstore(h3w3_2.slot, mload(add(pMem, pH3w3_2)))
             }
 
             function computeLiS0(pMem) {
                 let root0 := mload(add(pMem, pH0w8_0))
+
+                sstore(Root0.slot, root0)
                 let y := mload(add(pMem, pY))
+                sstore(Y.slot,y)
+
+
                 let den1 := 1
                 den1 := mulmod(den1, root0, q)
                 den1 := mulmod(den1, root0, q)
@@ -549,16 +628,26 @@ contract FflonkVerifier {
                 den1 := mulmod(den1, root0, q)
                 den1 := mulmod(den1, root0, q)
                 den1 := mulmod(den1, root0, q)
+                // sstore(Den1.slot, den1)
                 
                 den1 := mulmod(8, den1, q)
+                sstore(lastlis0inv.slot, den1)
+
 
                 let den2 := mload(add(pMem, add(pH0w8_0, mul(mod(mul(7, 0), 8), 32))))
                 let den3 := addmod(y, mod(sub(q, mload(add(pMem, add(pH0w8_0, mul(0, 32))))), q), q)
+                let temp := mod(sub(q, mload(add(pMem, add(pH0w8_0, mul(0, 32))))), q)
+                sstore(h0w8_0.slot, mload(add(pMem, add(pH0w8_0, mul(0, 32)))))
 
                 mstore(add(pMem, add(pLiS0Inv, 0)), mulmod(den1, mulmod(den2, den3, q), q))
+                sstore(Temp.slot, mload(add(pMem, add(pLiS0Inv, 0))))
 
                 den2 := mload(add(pMem, add(pH0w8_0, mul(mod(mul(7, 1), 8), 32))))
                 den3 := addmod(y, mod(sub(q, mload(add(pMem, add(pH0w8_0, mul(1, 32))))), q), q)
+                sstore(Den3.slot, den3)
+                sstore(Den2.slot, den2)
+
+
 
                 mstore(add(pMem, add(pLiS0Inv, 32)), mulmod(den1, mulmod(den2, den3, q), q))
 
@@ -591,6 +680,9 @@ contract FflonkVerifier {
                 den3 := addmod(y, mod(sub(q, mload(add(pMem, add(pH0w8_0, mul(7, 32))))), q), q)
 
                 mstore(add(pMem, add(pLiS0Inv, 224)), mulmod(den1, mulmod(den2, den3, q), q))
+
+                sstore(lastlis0inv.slot, mload(add(pMem,add(pLiS0Inv, 224)) ))
+
             
             }
 
@@ -621,7 +713,8 @@ contract FflonkVerifier {
                 den2 := mload(add(pMem, add(pH1w4_0, mul(mod(mul(3, 3), 4), 32))))
                 den3 := addmod(y, mod(sub(q, mload(add(pMem, add(pH1w4_0, mul(3, 32))))), q), q)
 
-                mstore(add(pMem, add(pLiS1Inv, 96)), mulmod(den1, mulmod(den2, den3, q), q))            
+                mstore(add(pMem, add(pLiS1Inv, 96)), mulmod(den1, mulmod(den2, den3, q), q))   
+                sstore(lastlis1inv.slot, mload(add(pMem, add(pLiS1Inv, 96))) )         
             }
 
             function computeLiS2(pMem) {
@@ -645,7 +738,9 @@ contract FflonkVerifier {
 
                 mstore(add(pMem, add(pLiS2Inv, 64)), mulmod(den1, mulmod(den2, den3, q), q))
 
+
                 den1 := mulmod(mulmod(3,mload(add(pMem, pH3w3_0)),q), addmod(mulmod(mload(add(pMem, pXi)), w1 ,q),mod(sub(q, mload(add(pMem, pXi))), q), q), q)
+                sstore(Den1.slot, den1)
 
                 den2 := mload(add(pMem, add(pH3w3_0, mul(mod(mul(2, 0), 3), 32))))
                 den3 := addmod(y, mod(sub(q, mload(add(pMem, add(pH3w3_0, mul(0, 32))))), q), q)
@@ -661,6 +756,8 @@ contract FflonkVerifier {
                 den3 := addmod(y, mod(sub(q, mload(add(pMem, add(pH3w3_0, mul(2, 32))))), q), q)
 
                 mstore(add(pMem, add(pLiS2Inv, 160)), mulmod(den1, mulmod(den2, den3, q), q))
+
+                sstore(lis2inv.slot, mload(add(pMem, add(pLiS2Inv, 160))))
             }
 
             // Prepare all the denominators that must be inverted, placed them in consecutive memory addresses
@@ -685,6 +782,8 @@ contract FflonkVerifier {
                 w := mulmod(w, addmod(y, mod(sub(q, mload(add(pMem, pH3w3_1))), q), q), q)
                 w := mulmod(w, addmod(y, mod(sub(q, mload(add(pMem, pH3w3_2))), q), q), q)
                 mstore(add(pMem, pDenH2), w)
+                sstore(W.slot, mload(add(pMem, pDenH2)))
+
 
                 // Denominator needed in the verifier when computing L_i^{S0}(X)
                 computeLiS0(pMem)
@@ -700,6 +799,7 @@ contract FflonkVerifier {
                 let xi := mload(add(pMem, pXi))
                 
                 mstore(add(pMem, pEval_l1), mulmod(n, mod(add(sub(xi, w), q), q), q))
+                
                 
 
                 // Execute Montgomery batched inversions of the previous prepared values
