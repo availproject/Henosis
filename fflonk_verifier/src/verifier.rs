@@ -4,6 +4,7 @@ use ark_ec::*;
 use ark_ff::{Field, Fp256, Fp256Parameters, One, PrimeField, UniformRand, Zero};
 use ark_poly::{domain, Polynomial};
 use num_bigint::*;
+use core::num;
 use std::fmt::{Debug, DebugMap, Display};
 use std::marker::PhantomData;
 use std::ops::{Add, Mul, Neg, Sub};
@@ -75,7 +76,7 @@ pub fn calculateInversions(
     h1w4: Vec<Fp256<FrParameters>>,
     h2w3: Vec<Fp256<FrParameters>>,
     h3w3: Vec<Fp256<FrParameters>>,
-) -> (Fp256<FrParameters>, LISValues) {
+) -> (Fp256<FrParameters>, LISValues, Fp256<FrParameters>, Fp256<FrParameters>) {
     let mut w = y
         .sub(h1w4[0])
         .mul(y.sub(h1w4[1]).mul(y.sub(h1w4[2]).mul(y.sub(h1w4[3]))));
@@ -106,7 +107,7 @@ pub fn calculateInversions(
 
     println!("eval_l1: {}", eval_l1);
 
-    let lis_values =  inverseArray(
+    let invser_arr_resp =  inverseArray(
         denH1,
         denH2,
         zhInv,
@@ -116,7 +117,7 @@ pub fn calculateInversions(
         &mut eval_l1,
     );
 
-    (eval_l1, lis_values)
+    (eval_l1, invser_arr_resp.0, invser_arr_resp.1, invser_arr_resp.2)
 }
 
 pub fn computeLiS0(
@@ -243,7 +244,7 @@ pub fn inverseArray(
     li_s1_inv: [Fp256<FrParameters>; 4],
     li_s2_inv: [Fp256<FrParameters>; 6],
     eval_l1: &mut Fp256<FrParameters>,
-) -> LISValues {
+) -> (LISValues, Fp256<FrParameters>, Fp256<FrParameters>) {
     // let mut local_eval_l1 = eval_l1.clone();
     let mut local_den_h1 = denH1.clone();
     let mut local_den_h2 = denH2.clone();
@@ -344,7 +345,7 @@ pub fn inverseArray(
         li_s2_inv: local_li_s2_inv,
     };
 
-    lis_values
+    (lis_values, local_den_h1, local_den_h2)
     // println!("local_zh_inv: {}", local_zh_inv);
 }
 
@@ -400,6 +401,22 @@ pub fn verify() {
         "5003111610252004233397444097453114204704498339788572052799252538137556416518",
     )
     .unwrap();
+
+
+    let g1_x =
+    <G1Point as AffineCurve>::BaseField::from_str("1")
+        .unwrap();
+    
+    let g1_y =
+    <G1Point as AffineCurve>::BaseField::from_str("2")
+        .unwrap();
+    
+    let g1_affine = G1Projective::new(
+        g1_x,
+        g1_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
 
     let h0w8: Vec<Fp256<FrParameters>> = vec![
         Fr::from_str(
@@ -484,6 +501,8 @@ pub fn verify() {
     let mut inv_tuple = calculateInversions(y, xi, zhinv, h0w8.clone(), h1w4.clone(), h2w3.clone(), h3w3.clone());
     let mut eval_l1 = inv_tuple.0;
     let lis_values = inv_tuple.1;
+    let denH1 = inv_tuple.2;
+    let denH2 = inv_tuple.3;
 
     println!("eval_l1: {}", eval_l1);
 
@@ -496,8 +515,10 @@ pub fn verify() {
     println!("Verifying proof...");
 
     let R0 = calculateR0(xi, proof.clone(), y, h0w8.clone(), lis_values.li_s0_inv);
-    let R1 = calculateR1(xi, proof.clone(), y, pi, h1w4, lis_values.li_s1_inv, zinv);
-    calculateR2(xi, gamma, beta, proof.clone(), y, eval_l1, zinv, h2w3, h3w3, lis_values.li_s2_inv);
+    let R1 = calculateR1(xi, proof.clone(), y, pi, h1w4.clone(), lis_values.li_s1_inv, zinv);
+    let R2 = calculateR2(xi, gamma, beta, proof.clone(), y, eval_l1, zinv, h2w3.clone(), h3w3.clone(), lis_values.li_s2_inv);
+    computeFEJ(y, h0w8.clone(), denH1, denH2, alpha, proof, g1_affine, R0, R1, R2);
+
     // let R2 = calculateR2(xi);
 }
 
@@ -823,7 +844,7 @@ fn calculateR1(xi: Fp256<FrParameters>, proof: Proof, y: Fp256<FrParameters>, pi
     res_4
 }
 
-fn calculateR2(xi: Fp256<FrParameters>, gamma: Fp256<FrParameters>, beta: Fp256<FrParameters>, proof: Proof, y: Fp256<FrParameters>, eval_l1: Fp256<FrParameters>, zinv: Fp256<FrParameters>, h2w3: Vec<Fp256<FrParameters>>, h3w3: Vec<Fp256<FrParameters>>, li_s2_inv: [Fp256<FrParameters>; 6]) {
+fn calculateR2(xi: Fp256<FrParameters>, gamma: Fp256<FrParameters>, beta: Fp256<FrParameters>, proof: Proof, y: Fp256<FrParameters>, eval_l1: Fp256<FrParameters>, zinv: Fp256<FrParameters>, h2w3: Vec<Fp256<FrParameters>>, h3w3: Vec<Fp256<FrParameters>>, li_s2_inv: [Fp256<FrParameters>; 6]) -> Fp256<FrParameters> {
    
    let Proof {
     eval_a,
@@ -948,4 +969,74 @@ fn calculateR2(xi: Fp256<FrParameters>, gamma: Fp256<FrParameters>, beta: Fp256<
     gamma_r2 = gamma_r2.add(c2Value.mul(num.mul(pLiS2Inv_160_term)));
 
     println!("gamma_r2 5: {:?}", gamma_r2.to_string());
+
+    gamma_r2
+}
+
+fn computeFEJ(y: Fp256<FrParameters>, h0w8: Vec<Fp256<FrParameters>>, denH1: Fp256<FrParameters>, denH2: Fp256<FrParameters>, alpha: Fp256<FrParameters>, proof: Proof, g1: GroupAffine<Parameters>, R0:  Fp256<FrParameters>, R1:  Fp256<FrParameters>, R2:  Fp256<FrParameters>) {
+    let mut numerator = y.sub(h0w8[0]);
+    numerator = numerator.mul(y.sub(h0w8[1]));
+    numerator = numerator.mul(y.sub(h0w8[2]));
+    numerator = numerator.mul(y.sub(h0w8[3]));
+    numerator = numerator.mul(y.sub(h0w8[4]));
+    numerator = numerator.mul(y.sub(h0w8[5]));
+    numerator = numerator.mul(y.sub(h0w8[6]));
+    numerator = numerator.mul(y.sub(h0w8[7]));
+
+    let c1 = proof.c1;
+    let c2 = proof.c2;
+    let w1 = proof.w1;
+
+    let mut quotient1 = alpha.mul(numerator.mul(denH1));
+    let mut quotient2 = alpha.mul(alpha.mul(numerator.mul(denH2)));
+
+    let c0_x =
+    <G1Point as AffineCurve>::BaseField::from_str("7005013949998269612234996630658580519456097203281734268590713858661772481668")
+        .unwrap();
+    
+    let c0_y =
+    <G1Point as AffineCurve>::BaseField::from_str("869093939501355406318588453775243436758538662501260653214950591532352435323")
+        .unwrap();
+    
+    let c0_affine = G1Projective::new(
+        c0_x,
+        c0_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+    // pf -> c0x
+    // pf + 32 -> c0y
+    // pf, pc1, quotient1
+
+    // min -> c1x
+    // min + 32 -> c1y
+    // min + 64 -> quotient1
+
+    // multiply c1 * quotient1
+
+    // min + 64 -> c0x
+    // min + 96 -> c0y
+
+    // adding points c1 * quotient1 + c0
+
+    let c1_agg = c0_affine.add(c1.mul(quotient1).into_affine());
+    let c2_agg = c0_affine.add(c2.mul(quotient2).into_affine());
+
+    let r_agg = R0.add(quotient1.mul(R1).add(quotient2.mul(R2)));
+
+
+    let g1_acc = g1.mul(r_agg).into_affine(); // E point
+    println!("g1_acc: {:?}", g1_acc.x.to_string());
+    println!("g1_acc: {:?}", g1_acc.y.to_string());
+
+    let w1_agg = w1.mul(numerator).into_affine(); // J Point
+    // pE, g1x, g1y, r_agg
+    // min -> g1x
+    // min + 32 -> g1y
+    // min + 64 -> r_agg
+
+    // multiply g1 * r_agg
+
+    // min + 64 -> 0
+    // min + 96 -> 0
 }
