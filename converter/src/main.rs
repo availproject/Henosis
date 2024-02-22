@@ -13,7 +13,7 @@ fn main() {
     let input_data: u64 = 10;
   
     let url = "url".to_string();
-    let api_key = "api_key".to_string();
+    let api_key = "key".to_string();
     let client = bonsai_sdk::Client::from_parts(url, api_key, risc0_zkvm::VERSION)
         .expect("Failed to construct sdk client");
 

@@ -1,15 +1,21 @@
-use ark_bn254::{g1, g1::Parameters, Bn254, FqParameters, Fr, FrParameters, G1Projective};
+pub use crate::utils::{get_domain_size, get_omegas, get_proof, get_pubSignals, Omegas, Proof};
+use ark_bn254::{
+    g1, g1::Parameters, Bn254, Fq, FqParameters, Fr, FrParameters, G1Projective, G2Projective,
+};
+use ark_bn254::{g2, Fq2, Fq2Parameters, G2Affine};
 use ark_ec::short_weierstrass_jacobian::GroupAffine;
 use ark_ec::*;
-use ark_ff::{Field, Fp256, Fp256Parameters, One, PrimeField, UniformRand, Zero};
+use ark_ff::{
+    field_new, Field, Fp256, Fp256Parameters, Fp2ParamsWrapper, One, PrimeField, QuadExtField,
+    UniformRand, Zero,
+};
 use ark_poly::{domain, Polynomial};
-use num_bigint::*;
 use core::num;
+use num_bigint::*;
 use std::fmt::{Debug, DebugMap, Display};
 use std::marker::PhantomData;
 use std::ops::{Add, Mul, Neg, Sub};
 use std::str::FromStr;
-pub use crate::utils::{get_domain_size, get_pubSignals, get_omegas, get_proof, Proof, Omegas};
 
 pub type G1Point = <Bn254 as PairingEngine>::G1Affine;
 pub type G2Point = <Bn254 as PairingEngine>::G2Affine;
@@ -76,7 +82,12 @@ pub fn calculateInversions(
     h1w4: Vec<Fp256<FrParameters>>,
     h2w3: Vec<Fp256<FrParameters>>,
     h3w3: Vec<Fp256<FrParameters>>,
-) -> (Fp256<FrParameters>, LISValues, Fp256<FrParameters>, Fp256<FrParameters>) {
+) -> (
+    Fp256<FrParameters>,
+    LISValues,
+    Fp256<FrParameters>,
+    Fp256<FrParameters>,
+) {
     let mut w = y
         .sub(h1w4[0])
         .mul(y.sub(h1w4[1]).mul(y.sub(h1w4[2]).mul(y.sub(h1w4[3]))));
@@ -107,7 +118,7 @@ pub fn calculateInversions(
 
     println!("eval_l1: {}", eval_l1);
 
-    let invser_arr_resp =  inverseArray(
+    let invser_arr_resp = inverseArray(
         denH1,
         denH2,
         zhInv,
@@ -117,7 +128,12 @@ pub fn calculateInversions(
         &mut eval_l1,
     );
 
-    (eval_l1, invser_arr_resp.0, invser_arr_resp.1, invser_arr_resp.2)
+    (
+        eval_l1,
+        invser_arr_resp.0,
+        invser_arr_resp.1,
+        invser_arr_resp.2,
+    )
 }
 
 pub fn computeLiS0(
@@ -263,7 +279,7 @@ pub fn inverseArray(
     acc = acc.mul(denH2);
     _acc.push(acc.clone());
 
-    for i in 0..8{
+    for i in 0..8 {
         acc = acc.mul(local_li_s0_inv[i]);
         _acc.push(acc);
     }
@@ -350,7 +366,6 @@ pub fn inverseArray(
 }
 
 pub fn verify() {
-
     let proof = get_proof();
     let alpha: Fp256<FrParameters> = Fr::from_str(
         "7322047676393218637481338970179134619960969643173747239601962635317485088344",
@@ -402,15 +417,10 @@ pub fn verify() {
     )
     .unwrap();
 
+    let g1_x = <G1Point as AffineCurve>::BaseField::from_str("1").unwrap();
 
-    let g1_x =
-    <G1Point as AffineCurve>::BaseField::from_str("1")
-        .unwrap();
-    
-    let g1_y =
-    <G1Point as AffineCurve>::BaseField::from_str("2")
-        .unwrap();
-    
+    let g1_y = <G1Point as AffineCurve>::BaseField::from_str("2").unwrap();
+
     let g1_affine = G1Projective::new(
         g1_x,
         g1_y,
@@ -498,7 +508,15 @@ pub fn verify() {
         .unwrap(),
     ];
 
-    let mut inv_tuple = calculateInversions(y, xi, zhinv, h0w8.clone(), h1w4.clone(), h2w3.clone(), h3w3.clone());
+    let mut inv_tuple = calculateInversions(
+        y,
+        xi,
+        zhinv,
+        h0w8.clone(),
+        h1w4.clone(),
+        h2w3.clone(),
+        h3w3.clone(),
+    );
     let mut eval_l1 = inv_tuple.0;
     let lis_values = inv_tuple.1;
     let denH1 = inv_tuple.2;
@@ -515,14 +533,110 @@ pub fn verify() {
     println!("Verifying proof...");
 
     let R0 = calculateR0(xi, proof.clone(), y, h0w8.clone(), lis_values.li_s0_inv);
-    let R1 = calculateR1(xi, proof.clone(), y, pi, h1w4.clone(), lis_values.li_s1_inv, zinv);
-    let R2 = calculateR2(xi, gamma, beta, proof.clone(), y, eval_l1, zinv, h2w3.clone(), h3w3.clone(), lis_values.li_s2_inv);
-    computeFEJ(y, h0w8.clone(), denH1, denH2, alpha, proof, g1_affine, R0, R1, R2);
+    let R1 = calculateR1(
+        xi,
+        proof.clone(),
+        y,
+        pi,
+        h1w4.clone(),
+        lis_values.li_s1_inv,
+        zinv,
+    );
+    let R2 = calculateR2(
+        xi,
+        gamma,
+        beta,
+        proof.clone(),
+        y,
+        eval_l1,
+        zinv,
+        h2w3.clone(),
+        h3w3.clone(),
+        lis_values.li_s2_inv,
+    );
+    let points = computeFEJ(
+        y,
+        h0w8.clone(),
+        denH1,
+        denH2,
+        alpha,
+        proof.clone(),
+        g1_affine,
+        R0,
+        R1,
+        R2,
+    );
 
-    // let R2 = calculateR2(xi);
+    let F = points.0;
+    let E = points.1;
+    let J = points.2;
+
+    let W2 = proof.w2;
+
+    // first pairing value
+    let p1 = F.add(-E).add(-J).add(W2.mul(y).into_affine());
+
+    let g2x1 = Fq::from_str(
+        "10857046999023057135944570762232829481370756359578518086990519993285655852781",
+    )
+    .unwrap();
+    let g2x2 = Fq::from_str(
+        "11559732032986387107991004021392285783925812861821192530917403151452391805634",
+    )
+    .unwrap();
+    let g2y1 =
+        Fq::from_str("869093939501355406318588453775243436758538662501260653214950591532352435323")
+            .unwrap();
+    let g2y2 = Fq::from_str(
+        "4082367875863433681332203403145435568316851327593401208105741076214120093531",
+    )
+    .unwrap();
+
+    // second pairing value
+    let g2_val = G2Affine::new(Fq2::new(g2x1, g2x2), Fq2::new(g2y1, g2y2), true);
+
+    // third pairing value
+    let p3 = -W2;
+
+    // fourth pairing value
+    let x2x1 = Fq::from_str(
+        "21831381940315734285607113342023901060522397560371972897001948545212302161822",
+    )
+    .unwrap();
+    let x2x2 = Fq::from_str(
+        "17231025384763736816414546592865244497437017442647097510447326538965263639101",
+    )
+    .unwrap();
+    let x2y1 = Fq::from_str(
+        "2388026358213174446665280700919698872609886601280537296205114254867301080648",
+    )
+    .unwrap();
+    let x2y2 = Fq::from_str(
+        "11507326595632554467052522095592665270651932854513688777769618397986436103170",
+    )
+    .unwrap();
+
+    // second pairing value
+
+    let x2_val = G2Affine::new(Fq2::new(x2x1, x2x2), Fq2::new(x2y1, x2y2), true);
+
+    let pairing1 = Bn254::pairing(p1, g2_val);
+    let pairing2 = Bn254::pairing(p3, x2_val);
+
+    if pairing1 == pairing2 {
+        println!("Proof is verified");
+    } else {
+        println!("Proof is not verified");
+    }
 }
 
-fn calculateR0(xi: Fp256<FrParameters>, proof: Proof, y: Fp256<FrParameters>, h0w8: Vec<Fp256<FrParameters>>, li_s0_inv: [Fp256<FrParameters>; 8]) -> Fp256<FrParameters> {
+fn calculateR0(
+    xi: Fp256<FrParameters>,
+    proof: Proof,
+    y: Fp256<FrParameters>,
+    h0w8: Vec<Fp256<FrParameters>>,
+    li_s0_inv: [Fp256<FrParameters>; 8],
+) -> Fp256<FrParameters> {
     let Proof {
         eval_ql,
         eval_qr,
@@ -609,8 +723,6 @@ fn calculateR0(xi: Fp256<FrParameters>, proof: Proof, y: Fp256<FrParameters>, h0
     let res_2 = res.add(c0Value.mul(num.mul(pLiS0Inv_32_term)));
 
     println!("res_2: {:?}", res_2.to_string());
-
-
 
     h0w80 = pH0w8_2_term;
     c0Value = eval_ql.add(h0w80.mul(eval_qr));
@@ -759,7 +871,15 @@ fn calculateR0(xi: Fp256<FrParameters>, proof: Proof, y: Fp256<FrParameters>, h0
     res_8
 }
 
-fn calculateR1(xi: Fp256<FrParameters>, proof: Proof, y: Fp256<FrParameters>, pi: Fp256<FrParameters>, h1w4: Vec<Fp256<FrParameters>>, li_s1_inv: [Fp256<FrParameters>; 4], zinv: Fp256<FrParameters>) -> Fp256<FrParameters> {
+fn calculateR1(
+    xi: Fp256<FrParameters>,
+    proof: Proof,
+    y: Fp256<FrParameters>,
+    pi: Fp256<FrParameters>,
+    h1w4: Vec<Fp256<FrParameters>>,
+    li_s1_inv: [Fp256<FrParameters>; 4],
+    zinv: Fp256<FrParameters>,
+) -> Fp256<FrParameters> {
     let mut num = Fr::from_str("1").unwrap();
     let Proof {
         eval_a,
@@ -772,7 +892,6 @@ fn calculateR1(xi: Fp256<FrParameters>, proof: Proof, y: Fp256<FrParameters>, pi
         eval_qm,
         ..
     } = proof;
-   
 
     let H1w4_0 = h1w4[0];
     let H1w4_1 = h1w4[1];
@@ -844,21 +963,31 @@ fn calculateR1(xi: Fp256<FrParameters>, proof: Proof, y: Fp256<FrParameters>, pi
     res_4
 }
 
-fn calculateR2(xi: Fp256<FrParameters>, gamma: Fp256<FrParameters>, beta: Fp256<FrParameters>, proof: Proof, y: Fp256<FrParameters>, eval_l1: Fp256<FrParameters>, zinv: Fp256<FrParameters>, h2w3: Vec<Fp256<FrParameters>>, h3w3: Vec<Fp256<FrParameters>>, li_s2_inv: [Fp256<FrParameters>; 6]) -> Fp256<FrParameters> {
-   
-   let Proof {
-    eval_a,
-    eval_b,
-    eval_c,
-    eval_z,
-    eval_s1,
-    eval_s2,
-    eval_s3,
-    eval_zw,
-    eval_t1w,
-    eval_t2w,
-    ..
-   } = proof;
+fn calculateR2(
+    xi: Fp256<FrParameters>,
+    gamma: Fp256<FrParameters>,
+    beta: Fp256<FrParameters>,
+    proof: Proof,
+    y: Fp256<FrParameters>,
+    eval_l1: Fp256<FrParameters>,
+    zinv: Fp256<FrParameters>,
+    h2w3: Vec<Fp256<FrParameters>>,
+    h3w3: Vec<Fp256<FrParameters>>,
+    li_s2_inv: [Fp256<FrParameters>; 6],
+) -> Fp256<FrParameters> {
+    let Proof {
+        eval_a,
+        eval_b,
+        eval_c,
+        eval_z,
+        eval_s1,
+        eval_s2,
+        eval_s3,
+        eval_zw,
+        eval_t1w,
+        eval_t2w,
+        ..
+    } = proof;
 
     let w1 = Fr::from_str(
         "5709868443893258075976348696661355716898495876243883251619397131511003808859",
@@ -973,7 +1102,22 @@ fn calculateR2(xi: Fp256<FrParameters>, gamma: Fp256<FrParameters>, beta: Fp256<
     gamma_r2
 }
 
-fn computeFEJ(y: Fp256<FrParameters>, h0w8: Vec<Fp256<FrParameters>>, denH1: Fp256<FrParameters>, denH2: Fp256<FrParameters>, alpha: Fp256<FrParameters>, proof: Proof, g1: GroupAffine<Parameters>, R0:  Fp256<FrParameters>, R1:  Fp256<FrParameters>, R2:  Fp256<FrParameters>) {
+fn computeFEJ(
+    y: Fp256<FrParameters>,
+    h0w8: Vec<Fp256<FrParameters>>,
+    denH1: Fp256<FrParameters>,
+    denH2: Fp256<FrParameters>,
+    alpha: Fp256<FrParameters>,
+    proof: Proof,
+    g1: GroupAffine<Parameters>,
+    R0: Fp256<FrParameters>,
+    R1: Fp256<FrParameters>,
+    R2: Fp256<FrParameters>,
+) -> (
+    GroupAffine<Parameters>,
+    GroupAffine<Parameters>,
+    GroupAffine<Parameters>,
+) {
     let mut numerator = y.sub(h0w8[0]);
     numerator = numerator.mul(y.sub(h0w8[1]));
     numerator = numerator.mul(y.sub(h0w8[2]));
@@ -990,14 +1134,16 @@ fn computeFEJ(y: Fp256<FrParameters>, h0w8: Vec<Fp256<FrParameters>>, denH1: Fp2
     let mut quotient1 = alpha.mul(numerator.mul(denH1));
     let mut quotient2 = alpha.mul(alpha.mul(numerator.mul(denH2)));
 
-    let c0_x =
-    <G1Point as AffineCurve>::BaseField::from_str("7005013949998269612234996630658580519456097203281734268590713858661772481668")
-        .unwrap();
-    
-    let c0_y =
-    <G1Point as AffineCurve>::BaseField::from_str("869093939501355406318588453775243436758538662501260653214950591532352435323")
-        .unwrap();
-    
+    let c0_x = <G1Point as AffineCurve>::BaseField::from_str(
+        "7005013949998269612234996630658580519456097203281734268590713858661772481668",
+    )
+    .unwrap();
+
+    let c0_y = <G1Point as AffineCurve>::BaseField::from_str(
+        "869093939501355406318588453775243436758538662501260653214950591532352435323",
+    )
+    .unwrap();
+
     let c0_affine = G1Projective::new(
         c0_x,
         c0_y,
@@ -1019,17 +1165,25 @@ fn computeFEJ(y: Fp256<FrParameters>, h0w8: Vec<Fp256<FrParameters>>, denH1: Fp2
 
     // adding points c1 * quotient1 + c0
 
+    // print!("Quotient 1: {:?}", quotient1.to_string());
+    // print!("Quotient 2: {:?}", quotient2.to_string());
+
     let c1_agg = c0_affine.add(c1.mul(quotient1).into_affine());
-    let c2_agg = c0_affine.add(c2.mul(quotient2).into_affine());
+
+    let c2_agg = c1_agg.add(c2.mul(quotient2).into_affine()); //  F point
+                                                              // println!("c2_agg: {:?}", c2_agg.x.to_string());
+                                                              // println!("c2_agg: {:?}", c2_agg.y.to_string());
 
     let r_agg = R0.add(quotient1.mul(R1).add(quotient2.mul(R2)));
 
-
     let g1_acc = g1.mul(r_agg).into_affine(); // E point
-    println!("g1_acc: {:?}", g1_acc.x.to_string());
-    println!("g1_acc: {:?}", g1_acc.y.to_string());
+                                              // println!("g1_acc: {:?}", g1_acc.x.to_string());
+                                              // println!("g1_acc: {:?}", g1_acc.y.to_string());
 
     let w1_agg = w1.mul(numerator).into_affine(); // J Point
+
+    // println!("w1_agg: {:?}", w1_agg.x.to_string());
+    // println!("w1_agg: {:?}", w1_agg.y.to_string());
     // pE, g1x, g1y, r_agg
     // min -> g1x
     // min + 32 -> g1y
@@ -1039,4 +1193,5 @@ fn computeFEJ(y: Fp256<FrParameters>, h0w8: Vec<Fp256<FrParameters>>, denH1: Fp2
 
     // min + 64 -> 0
     // min + 96 -> 0
+    (c2_agg, g1_acc, w1_agg)
 }
