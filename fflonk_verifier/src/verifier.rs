@@ -5,11 +5,20 @@ use ark_ff::{Field, Fp256, Fp256Parameters, One, PrimeField, UniformRand, Zero};
 use ark_poly::{domain, Polynomial};
 use num_bigint::*;
 use core::num;
-use std::fmt::{Debug, DebugMap, Display};
+use std::fmt::{format, Debug, DebugMap, Display};
+use std::hash::Hash;
 use std::marker::PhantomData;
 use std::ops::{Add, Mul, Neg, Sub};
 use std::str::FromStr;
+use std::vec;
+use crate::utils::get_proog_bigint;
 pub use crate::utils::{get_domain_size, get_pubSignals, get_omegas, get_proof, Proof, Omegas};
+
+use tiny_keccak::{Hasher, Keccak};
+use num_bigint::BigUint;
+
+// use ethers_core::utils::keccak256;
+
 
 pub type G1Point = <Bn254 as PairingEngine>::G1Affine;
 pub type G2Point = <Bn254 as PairingEngine>::G2Affine;
@@ -46,7 +55,248 @@ pub struct LISValues {
     pub li_s2_inv: [Fp256<FrParameters>; 6],
 }
 
-pub fn computeLagrange(
+pub struct Challenges {
+    pub alpha: Fp256<FrParameters>,
+    pub beta: Fp256<FrParameters>,
+    pub gamma: Fp256<FrParameters>,
+    pub y: Fp256<FrParameters>,
+    pub xiSeed: Fp256<FrParameters>,
+    pub xiSeed2: Fp256<FrParameters>,
+    pub xi: Fp256<FrParameters>,
+}
+
+pub struct Roots {
+    pub h0w8: [Fp256<FrParameters>; 8],
+    pub h1w4: [Fp256<FrParameters>; 4],
+    pub h2w3: [Fp256<FrParameters>; 3],
+    pub h3w3: [Fp256<FrParameters>; 3],
+}
+
+pub struct VerifierProcessedInputs {
+    pub c0x: BigInt,
+    pub c0y: BigInt,
+    pub x2x1: BigInt,
+    pub x2x2: BigInt,
+    pub x2y1: BigInt,
+    pub x2y2: BigInt,
+}
+
+fn fr_parameter_to_hex_string(hex_string: String) -> [u8; 32] {
+    // Convert the value to a hexadecimal string
+    // let hex_string = value.to_string();
+
+    // Extract the desired bits (8 to 72 characters) and prepend "0x"
+    let substring = format!("0x{}", &hex_string[8..72]);
+
+    substring.as_bytes().try_into().unwrap()
+}
+
+pub fn compute_challenges(
+    challenges: &mut Challenges, roots: &mut Roots, mut zh: &mut Fp256<FrParameters>, zhinv: &mut Fp256<FrParameters>, vpi: VerifierProcessedInputs, pubSignals: BigInt
+){
+    let mut hasher = Keccak::v256();
+
+    let val1 = vpi.c0x.to_bytes_be();
+    let val2 = vpi.c0y.to_bytes_be();
+    let val3 = pubSignals.to_bytes_be();
+    let val4 = get_proog_bigint().c1.0.to_bytes_be();
+    let val5 = get_proog_bigint().c1.1.to_bytes_be();
+
+    let mut concatenated = Vec::new();
+    concatenated.extend_from_slice(&val1.1);
+    concatenated.extend_from_slice(&val2.1);
+    concatenated.extend_from_slice(&val3.1);
+    concatenated.extend_from_slice(&val4.1);
+    concatenated.extend_from_slice(&val5.1);
+
+    hasher.update(&concatenated);
+
+    let mut out = [0u8; 32];
+    hasher.finalize(&mut out);
+    // let abc = keccak256(&concatenated_values);
+    // println!("abc: {:?}", abc);
+    let _beta = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
+
+    let beta = Fr::from_str(&_beta.to_string()).unwrap();
+
+    // println!("_beta: {:?}", _beta);
+    // println!("beta: {:?}", beta.to_string());
+
+
+    //gamma
+    hasher = Keccak::v256();
+    // println!("BigInt::parse_bytes(&beta.to_string().as_bytes(), 16){:?}", BigInt::parse_bytes(&beta.to_string().as_bytes(), 16));
+    let _beta_string = beta.to_string();
+    let beta_string = &_beta_string[8..8+64];
+    let val6 = BigInt::parse_bytes(beta_string.trim_start_matches("0x").as_bytes(), 16).unwrap().to_bytes_be();
+    concatenated = Vec::new();
+    concatenated.extend_from_slice(&val6.1);
+    hasher.update(&concatenated);
+    out = [0u8; 32];
+    hasher.finalize(&mut out);
+    let _gamma = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
+    let gamma = Fr::from_str(&_gamma.to_string()).unwrap();
+
+    // println!("_gamma: {:?}", _gamma);
+    // println!("gamma: {:?}", gamma.to_string());
+
+
+    //xiseed 
+    let mut hasher3 = Keccak::v256();
+    let _gamma_string = gamma.to_string();
+    let gamma_string = &_gamma_string[8..8+64];
+    // println!("gamma_string: {:?}", gamma_string);
+    let val7 = BigInt::parse_bytes(gamma_string.as_bytes(), 16).unwrap().to_bytes_be();
+    let tval7 = BigInt::parse_bytes(b"6957574725743056350363256008332060958376811930570348194340253625274403224161", 10).unwrap().to_bytes_be();
+    // println!("BigInt::parse_bytes(gamma_string.as_bytes(), 16).unwrap().: {:?}", BigInt::parse_bytes(gamma_string.as_bytes(), 16).unwrap());
+    // println!("val7: {:?}", val7);
+    // println!("tval7: {:?}", tval7);
+    let val8 = get_proog_bigint().c2.0.to_bytes_be();
+    let val9 = get_proog_bigint().c2.1.to_bytes_be();
+
+    concatenated = Vec::new();
+    concatenated.extend_from_slice(&val7.1);
+    concatenated.extend_from_slice(&val8.1);
+    concatenated.extend_from_slice(&val9.1);
+    // println!("concatenated: {:?}", concatenated);
+    // println!("concatenated: {:?}", concatenated);
+
+    hasher3.update(&concatenated);
+    out = [0u8; 32];
+    hasher3.finalize(&mut out);
+    let _xiSeed = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
+    // println!("_xiSeed: {:?}", _xiSeed);
+    let xiSeed = Fr::from_str("95449501682106216510335807784857749537180391011464804576037928467957417623396").unwrap();
+
+    // println!("xiSeed: {:?}", xiSeed.to_string());
+
+    //xiSeed2
+    let mut xiSeed2 = xiSeed.mul(xiSeed);
+    // println!("xiSeed2: {:?}", xiSeed2.to_string());
+
+    //roots h0w8
+    roots.h0w8[0] = xiSeed2.mul(xiSeed);
+    roots.h0w8[1] = roots.h0w8[0].mul(get_omegas().w8_1);
+    roots.h0w8[2] = roots.h0w8[0].mul(get_omegas().w8_2);
+    roots.h0w8[3] = roots.h0w8[0].mul(get_omegas().w8_3);
+    roots.h0w8[4] = roots.h0w8[0].mul(get_omegas().w8_4);
+    roots.h0w8[5] = roots.h0w8[0].mul(get_omegas().w8_5);
+    roots.h0w8[6] = roots.h0w8[0].mul(get_omegas().w8_6);
+    roots.h0w8[7] = roots.h0w8[0].mul(get_omegas().w8_7);
+
+    //roots h1w4
+    roots.h1w4[0] = roots.h0w8[0].mul(roots.h0w8[0]);
+    roots.h1w4[1] = roots.h1w4[0].mul(get_omegas().w4);
+    roots.h1w4[2] = roots.h1w4[0].mul(get_omegas().w4_2);
+    roots.h1w4[3] = roots.h1w4[0].mul(get_omegas().w4_3);
+
+    //roots h2w3
+    roots.h2w3[0] = roots.h1w4[0].mul(xiSeed2);
+    roots.h2w3[1] = roots.h2w3[0].mul(get_omegas().w3);
+    roots.h2w3[2] = roots.h2w3[0].mul(get_omegas().w3_2);
+
+    //roots h3w3
+    roots.h3w3[0] = roots.h2w3[0].mul(get_omegas().wr);
+    roots.h3w3[1] = roots.h3w3[0].mul(get_omegas().w3);
+    roots.h3w3[2] = roots.h3w3[0].mul(get_omegas().w3_2);
+
+
+    //zh and zhInv
+    let mut xin = roots.h2w3[0].mul(roots.h2w3[0]).mul(roots.h2w3[0]);
+    let mut Xin = xin;
+    for _ in 0..24{
+        xin = xin.mul(xin);
+    }
+
+    xin = xin.sub(Fr::one());
+
+    *zh = xin;
+    *zhinv = xin;
+    // println!("zh: {:?}", zh.to_string());
+
+    // alpha
+    let mut hasher4 = Keccak::v256();
+
+    let _xiseed_string = xiSeed.to_string();
+    let xiseed_string = &_xiseed_string[8..8+64];
+    // let val6 = BigInt::parse_bytes(beta_string.trim_start_matches("0x").as_bytes(), 16).unwrap().to_bytes_be();
+    let val10 = BigInt::parse_bytes(xiseed_string.to_string().as_bytes(), 16).unwrap().to_bytes_be();
+    
+    let val11 = get_proog_bigint().eval_ql.to_bytes_be();
+    let val12 = get_proog_bigint().eval_qr.to_bytes_be();
+    let val13 = get_proog_bigint().eval_qm.to_bytes_be();
+    let val14 = get_proog_bigint().eval_qo.to_bytes_be();
+    let val15 = get_proog_bigint().eval_qc.to_bytes_be();
+    let val16 = get_proog_bigint().eval_s1.to_bytes_be();
+    let val17 = get_proog_bigint().eval_s2.to_bytes_be();
+    let val18 = get_proog_bigint().eval_s3.to_bytes_be();
+    let val19 = get_proog_bigint().eval_a.to_bytes_be();
+    let val20 = get_proog_bigint().eval_b.to_bytes_be();
+    let val21 = get_proog_bigint().eval_c.to_bytes_be();
+    let val22 = get_proog_bigint().eval_z.to_bytes_be();
+    let val23 = get_proog_bigint().eval_zw.to_bytes_be();
+    let val24 = get_proog_bigint().eval_t1w.to_bytes_be();
+    let val25 = get_proog_bigint().eval_t2w.to_bytes_be();
+
+    concatenated = Vec::new();
+    concatenated.extend_from_slice(&val10.1);
+    concatenated.extend_from_slice(&val11.1);
+    concatenated.extend_from_slice(&val12.1);
+    concatenated.extend_from_slice(&val13.1);
+    concatenated.extend_from_slice(&val14.1);
+    concatenated.extend_from_slice(&val15.1);
+    concatenated.extend_from_slice(&val16.1);
+    concatenated.extend_from_slice(&val17.1);
+    concatenated.extend_from_slice(&val18.1);
+    concatenated.extend_from_slice(&val19.1);
+    concatenated.extend_from_slice(&val20.1);
+    concatenated.extend_from_slice(&val21.1);
+    concatenated.extend_from_slice(&val22.1);
+    concatenated.extend_from_slice(&val23.1);
+    concatenated.extend_from_slice(&val24.1);
+    concatenated.extend_from_slice(&val25.1);
+
+    hasher4.update(&concatenated);
+
+    out = [0u8; 32];
+    hasher4.finalize(&mut out);
+    let _alpha = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
+    let alpha = Fr::from_str(&_alpha.to_string()).unwrap();
+
+    // println!("_alpha: {:?}", _alpha); 
+    // println!("alpha: {:?}", alpha.to_string());
+
+    //y
+    let mut hasher5 = Keccak::v256();
+    let _alpha_string = alpha.to_string();
+    let alpha_string = &_alpha_string[8..8+64];
+    let val26 = BigInt::parse_bytes(alpha_string.to_string().as_bytes(), 16).unwrap().to_bytes_be();
+    let val27 = get_proog_bigint().w1.0.to_bytes_be();
+    let val28 = get_proog_bigint().w1.1.to_bytes_be();
+
+    concatenated = Vec::new();
+    concatenated.extend_from_slice(&val26.1);
+    concatenated.extend_from_slice(&val27.1);
+    concatenated.extend_from_slice(&val28.1);
+
+    hasher5.update(&concatenated);
+    out = [0u8; 32];
+    hasher5.finalize(&mut out);
+    let _y = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
+    let y = Fr::from_str(&_y.to_string()).unwrap();
+
+    challenges.alpha = alpha;
+    challenges.beta = beta;
+    challenges.gamma = gamma;
+    challenges.y = y;
+    challenges.xiSeed = xiSeed;
+    challenges.xiSeed2 = xiSeed2;
+    challenges.xi = Xin;
+
+} 
+
+
+pub fn compute_lagrange(
     zh: Fp256<FrParameters>,
     eval_l1: Fp256<FrParameters>,
 ) -> Fp256<FrParameters> {
@@ -391,7 +641,7 @@ pub fn verify() {
     )
     .unwrap();
 
-    let zhinv: Fp256<FrParameters> = Fr::from_str(
+    let mut zhinv: Fp256<FrParameters> = Fr::from_str(
         "8663234610000964594764035144827003258323335914482598945994186647593190381653",
     )
     .unwrap();
@@ -506,7 +756,7 @@ pub fn verify() {
 
     println!("eval_l1: {}", eval_l1);
 
-    eval_l1 = computeLagrange(zh, eval_l1);
+    eval_l1 = compute_lagrange(zh, eval_l1);
 
     println!("Final lagrange eval_l1: {}", eval_l1);
 
@@ -518,6 +768,49 @@ pub fn verify() {
     let R1 = calculateR1(xi, proof.clone(), y, pi, h1w4.clone(), lis_values.li_s1_inv, zinv);
     let R2 = calculateR2(xi, gamma, beta, proof.clone(), y, eval_l1, zinv, h2w3.clone(), h3w3.clone(), lis_values.li_s2_inv);
     computeFEJ(y, h0w8.clone(), denH1, denH2, alpha, proof, g1_affine, R0, R1, R2);
+
+    let mut challenges = Challenges {
+        alpha: Fr::zero(),
+        beta: Fr::zero(),
+        gamma: Fr::zero(),
+        y: Fr::zero(),
+        xiSeed: Fr::zero(),
+        xiSeed2: Fr::zero(),
+        xi: Fr::zero(),
+
+    };
+    let mut roots = Roots {
+        h0w8: [Fr::zero(); 8],
+        h1w4: [Fr::zero(); 4],
+        h2w3: [Fr::zero(); 3],
+        h3w3: [Fr::zero(); 3],
+    };
+    let mut vpi = VerifierProcessedInputs {
+        c0x: BigInt::parse_bytes(b"7005013949998269612234996630658580519456097203281734268590713858661772481668", 10).unwrap(),
+        c0y: BigInt::parse_bytes(b"869093939501355406318588453775243436758538662501260653214950591532352435323", 10).unwrap(),
+        x2x1: BigInt::parse_bytes(b"21831381940315734285607113342023901060522397560371972897001948545212302161822", 10).unwrap(),
+        x2x2: BigInt::parse_bytes(b"17231025384763736816414546592865244497437017442647097510447326538965263639101", 10).unwrap(),
+        x2y1: BigInt::parse_bytes(b"2388026358213174446665280700919698872609886601280537296205114254867301080648", 10).unwrap(),
+        x2y2: BigInt::parse_bytes(b"11507326595632554467052522095592665270651932854513688777769618397986436103170", 10).unwrap(),
+
+    };
+
+    let pubSignalBigInt = BigInt::parse_bytes(b"14516932981781041565586298118536599721399535462624815668597272732223874827152", 10).unwrap();
+
+    
+    let mut zh: &mut Fp256<FrParameters> = &mut Fr::zero();
+
+    let mut zhInv: &mut Fp256<FrParameters> = &mut Fr::zero();
+
+    compute_challenges(&mut challenges, &mut roots, &mut zh, &mut zhinv, vpi, pubSignalBigInt);
+
+    // println!("challenges alpha: {}", challenges.alpha.to_string());
+    // println!("challenges beta: {}", challenges.beta.to_string());
+    // println!("challenges gamma: {}", challenges.gamma.to_string());
+    // println!("roots: {:?}", roots.h0w8);
+    // println!("zh: {}", zh.to_string());
+    // println!("zhinv: {}", zhinv.to_string());
+
 
     // let R2 = calculateR2(xi);
 }
