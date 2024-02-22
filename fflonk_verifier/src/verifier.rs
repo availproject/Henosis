@@ -18,7 +18,6 @@ use std::ops::{Add, Mul, Neg, Sub};
 use std::str::FromStr;
 use std::vec;
 use crate::utils::get_proog_bigint;
-pub use crate::utils::{get_domain_size, get_pubSignals, get_omegas, get_proof, Proof, Omegas};
 use num_bigint::*;
 
 use tiny_keccak::{Hasher, Keccak};
@@ -128,23 +127,28 @@ pub fn compute_challenges(
     let val7 = BigInt::parse_bytes(gamma_string.as_bytes(), 16).unwrap().to_bytes_be();
     let tval7 = BigInt::parse_bytes(b"6957574725743056350363256008332060958376811930570348194340253625274403224161", 10).unwrap().to_bytes_be();
     // println!("BigInt::parse_bytes(gamma_string.as_bytes(), 16).unwrap().: {:?}", BigInt::parse_bytes(gamma_string.as_bytes(), 16).unwrap());
-    // println!("val7: {:?}", val7);
+    println!("val7: {:?}", val7);
     // println!("tval7: {:?}", tval7);
     let val8 = get_proog_bigint().c2.0.to_bytes_be();
+    println!("val8: {:?}", val8);
+    let mut tempval8 = val8.clone().1;
+    tempval8.insert(0, 0);
+
     let val9 = get_proog_bigint().c2.1.to_bytes_be();
+    println!("val9: {:?}", val9);
 
     concatenated = Vec::new();
     concatenated.extend_from_slice(&val7.1);
-    concatenated.extend_from_slice(&val8.1);
+    concatenated.extend_from_slice(&tempval8);
     concatenated.extend_from_slice(&val9.1);
     // println!("concatenated: {:?}", concatenated);
-    // println!("concatenated: {:?}", concatenated);
+    println!("concatenated: {:?}", concatenated);
 
     hasher3.update(&concatenated);
     out = [0u8; 32];
     hasher3.finalize(&mut out);
     let _xiSeed = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
-    // println!("_xiSeed: {:?}", _xiSeed);
+    println!("_xiSeed: {:?}", _xiSeed);
     let xiSeed = Fr::from_str("95449501682106216510335807784857749537180391011464804576037928467957417623396").unwrap();
 
     // println!("xiSeed: {:?}", xiSeed.to_string());
@@ -589,7 +593,7 @@ pub fn inverseArray(
 }
 
 pub fn verify(proof: Proof) -> bool {
-    // let proof = get_proof();
+    let proof = get_proof();
     let alpha: Fp256<FrParameters> = Fr::from_str(
         "7322047676393218637481338970179134619960969643173747239601962635317485088344",
     )
