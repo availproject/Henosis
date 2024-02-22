@@ -212,6 +212,15 @@ contract FflonkVerifier {
     uint256 public Den3;
     uint256 public Temp;
     uint256 public lis2inv;
+    uint256 public Eval1;
+    uint public ZHinv;
+    uint public firstzinv;
+    uint public finalzhinv;
+    uint public li_s2_inv_6;
+    uint public AUX;
+    uint public Inv;
+    uint public ACC;
+
 
 
 
@@ -229,6 +238,8 @@ contract FflonkVerifier {
                 let pAux := mload(0x40)     // Point to the next free position
                 let acc := mload(add(pMem,pZhInv))       // Read the first element
                 mstore(pAux, acc)
+
+                sstore(firstzinv.slot, acc)
 
                 pAux := add(pAux, 32)
                 acc := mulmod(acc, mload(add(pMem, pDenH1)), q)
@@ -309,6 +320,7 @@ contract FflonkVerifier {
                 pAux := add(pAux, 32)
                 acc := mulmod(acc, mload(add(pMem, add(pLiS2Inv, 160))), q)
                 mstore(pAux, acc)
+                sstore(ACC.slot, acc)
 
                 pAux := add(pAux, 32)
                 acc := mulmod(acc, mload(add(pMem, pEval_l1)), q)
@@ -323,12 +335,21 @@ contract FflonkVerifier {
                     return(0,0x20)
                 }
 
+                sstore(li_s2_inv_6.slot, mload( add(pMem, add(pLiS2Inv, 160))))
+
                 acc := inv
+                sstore(Inv.slot, inv)
+
 
                 pAux := sub(pAux, 32)
+                sstore(AUX.slot, mload(pAux))
+
                 inv := mulmod(acc, mload(pAux), q)
                 acc := mulmod(acc, mload(add(pMem, pEval_l1)), q)
                 mstore(add(pMem, pEval_l1), inv)
+                sstore(Eval1.slot, mload(add(pMem, pEval_l1)))
+
+
                 pAux := sub(pAux, 32)
                 inv := mulmod(acc, mload(pAux), q)
                 acc := mulmod(acc, mload(add(pMem, add(pLiS2Inv, 160))), q)
@@ -411,6 +432,10 @@ contract FflonkVerifier {
                 mstore(add(pMem, pDenH1), inv)
 
                 mstore(add(pMem, pZhInv), acc)
+                // add(pLiS2Inv, 64))/
+                
+
+                sstore(finalzhinv.slot, mload(add(pMem, pZhInv)))
             }
 
             function checkField(v) {
@@ -583,6 +608,7 @@ contract FflonkVerifier {
                 mstore(add(pMem, 1984 ),  calldataload(add(pW1, 32)))
                 mstore(add(pMem, pY), mod(keccak256(add(pMem, lastMem), 96), q))
 
+                sstore(ZHinv.slot, mload(add(pMem, pZhInv)))
                 sstore(Beta.slot, mload(add(pMem,pBeta)))
                 sstore(Gamma.slot, mload(add(pMem,pGamma)))
                 sstore(XiSeed.slot, mload(add(pMem, pXiSeed)))
@@ -799,6 +825,7 @@ contract FflonkVerifier {
                 let xi := mload(add(pMem, pXi))
                 
                 mstore(add(pMem, pEval_l1), mulmod(n, mod(add(sub(xi, w), q), q), q))
+
                 
                 
 
@@ -811,6 +838,8 @@ contract FflonkVerifier {
                 let w := 1
                 
                     mstore(add(pMem, pEval_l1 ), mulmod(mload(add(pMem, pEval_l1 )), zh, q))
+
+                    // sstore(Eval1.slot, mload(add(pMem, pEval_l1 )))
                     
             }
 
