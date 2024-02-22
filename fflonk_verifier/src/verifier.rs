@@ -351,9 +351,14 @@ pub fn inverseArray(denH1: Fp256<FrParameters>, denH2: Fp256<FrParameters>, zhIn
 
     let mut _acc: Vec<Fp256<FrParameters>> = Vec::new();
 
-    let mut acc = zhInv.mul(denH1).mul(denH2);
+    _acc.push(zhInv.clone());
+
+    let mut acc = zhInv.mul(denH1);
     _acc.push(acc.clone());
-    let mut temp_acc = Fr::from_str("1").unwrap();
+
+    acc = acc.mul(denH2);
+    _acc.push(acc.clone());
+
     for i in 0..8{
         acc = acc.mul(local_li_s0_inv[i]);
         _acc.push(acc);
@@ -365,9 +370,6 @@ pub fn inverseArray(denH1: Fp256<FrParameters>, denH2: Fp256<FrParameters>, zhIn
     for i in 0..6{
         acc = acc.mul(local_li_s2_inv[i]);
         _acc.push(acc);
-        if i==5{
-            temp_acc = acc.clone();
-        }
     }
     acc = acc.mul(eval_l1.clone());
     _acc.push(acc);
@@ -428,6 +430,11 @@ pub fn inverseArray(denH1: Fp256<FrParameters>, denH2: Fp256<FrParameters>, zhIn
 
     
     local_zh_inv = acc;
+
+    println!("ls_s0_inv_0: {}", local_li_s0_inv[0]);
+    println!("ls_s0_inv_8: {}", local_li_s0_inv[7]);
+    println!("ls_s1_inv_0: {}", local_li_s1_inv[0]);
+    println!("ls_s1_inv_4: {}", local_li_s1_inv[3]);
 
     // println!("local_zh_inv: {}", local_zh_inv);
 }
