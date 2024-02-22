@@ -712,12 +712,12 @@ pub fn verify() {
         .unwrap(),
     ];
 
-    let mut eval_l1 = calculateInversions(y, xi, zhinv, h0w8, h1w4, h2w3, h3w3);
-    println!("eval_l1: {}", eval_l1);
+    // let mut eval_l1 = calculateInversions(y, xi, zhinv, h0w8, h1w4, h2w3, h3w3);
+    // println!("eval_l1: {}", eval_l1);
 
-    eval_l1 = computeLagrange(zh, eval_l1);
+    // eval_l1 = computeLagrange(zh, eval_l1);
 
-    println!("Final lagrange eval_l1: {}", eval_l1);
+    // println!("Final lagrange eval_l1: {}", eval_l1);
 
     // computePi(get_pubSignals(), eval_l1);
 
