@@ -81,43 +81,34 @@ pub fn compute_challenges(
     let val5 = get_proog_bigint().c1.1.to_bytes_be();
 
     let mut concatenated = Vec::new();
-    concatenated.extend_from_slice(&val1.1);
-    concatenated.extend_from_slice(&val2.1);
-    concatenated.extend_from_slice(&val3.1);
-    concatenated.extend_from_slice(&val4.1);
-    concatenated.extend_from_slice(&val5.1);
+    concatenated.extend_from_slice(&padd_bytes32(val1.1));
+    concatenated.extend_from_slice(&padd_bytes32(val2.1));
+    concatenated.extend_from_slice(&padd_bytes32(val3.1));
+    concatenated.extend_from_slice(&padd_bytes32(val4.1));
+    concatenated.extend_from_slice(&padd_bytes32(val5.1));
 
     hasher.update(&concatenated);
 
     let mut out = [0u8; 32];
     hasher.finalize(&mut out);
-    // let abc = keccak256(&concatenated_values);
-    // println!("abc: {:?}", abc);
     let _beta = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
 
     let beta = Fr::from_str(&_beta.to_string()).unwrap();
 
-    // println!("_beta: {:?}", _beta);
-    // println!("beta: {:?}", beta.to_string());
-
 
     //gamma
     hasher = Keccak::v256();
-    // println!("BigInt::parse_bytes(&beta.to_string().as_bytes(), 16){:?}", BigInt::parse_bytes(&beta.to_string().as_bytes(), 16));
+
     let _beta_string = beta.to_string();
     let beta_string = &_beta_string[8..8+64];
     let val6 = BigInt::parse_bytes(beta_string.trim_start_matches("0x").as_bytes(), 16).unwrap().to_bytes_be();
     concatenated = Vec::new();
-    concatenated.extend_from_slice(&val6.1);
+    concatenated.extend_from_slice(&padd_bytes32(val6.1));
     hasher.update(&concatenated);
     out = [0u8; 32];
     hasher.finalize(&mut out);
     let _gamma = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
     let gamma = Fr::from_str(&_gamma.to_string()).unwrap();
-
-    // println!("_gamma: {:?}", _gamma);
-    // println!("gamma: {:?}", gamma.to_string());
-
 
     //xiseed 
     let mut hasher3 = Keccak::v256();
@@ -125,31 +116,19 @@ pub fn compute_challenges(
     let gamma_string = &_gamma_string[8..8+64];
     // println!("gamma_string: {:?}", gamma_string);
     let val7 = BigInt::parse_bytes(gamma_string.as_bytes(), 16).unwrap().to_bytes_be();
-    let tval7 = BigInt::parse_bytes(b"6957574725743056350363256008332060958376811930570348194340253625274403224161", 10).unwrap().to_bytes_be();
-    // println!("BigInt::parse_bytes(gamma_string.as_bytes(), 16).unwrap().: {:?}", BigInt::parse_bytes(gamma_string.as_bytes(), 16).unwrap());
-    println!("val7: {:?}", val7);
-    // println!("tval7: {:?}", tval7);
     let val8 = get_proog_bigint().c2.0.to_bytes_be();
-    println!("val8: {:?}", val8);
-    let mut tempval8 = val8.clone().1;
-    tempval8.insert(0, 0);
-
     let val9 = get_proog_bigint().c2.1.to_bytes_be();
-    println!("val9: {:?}", val9);
 
     concatenated = Vec::new();
-    concatenated.extend_from_slice(&val7.1);
-    concatenated.extend_from_slice(&tempval8);
-    concatenated.extend_from_slice(&val9.1);
-    // println!("concatenated: {:?}", concatenated);
-    println!("concatenated: {:?}", concatenated);
+    concatenated.extend_from_slice(&padd_bytes32(val7.1));
+    concatenated.extend_from_slice(&padd_bytes32(val8.1));
+    concatenated.extend_from_slice(&padd_bytes32(val9.1));
 
     hasher3.update(&concatenated);
     out = [0u8; 32];
     hasher3.finalize(&mut out);
     let _xiSeed = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
-    println!("_xiSeed: {:?}", _xiSeed);
-    let xiSeed = Fr::from_str("95449501682106216510335807784857749537180391011464804576037928467957417623396").unwrap();
+    let xiSeed = Fr::from_str(&_xiSeed.to_string()).unwrap();
 
     // println!("xiSeed: {:?}", xiSeed.to_string());
 
@@ -222,22 +201,21 @@ pub fn compute_challenges(
     let val25 = get_proog_bigint().eval_t2w.to_bytes_be();
 
     concatenated = Vec::new();
-    concatenated.extend_from_slice(&val10.1);
-    concatenated.extend_from_slice(&val11.1);
-    concatenated.extend_from_slice(&val12.1);
-    concatenated.extend_from_slice(&val13.1);
-    concatenated.extend_from_slice(&val14.1);
-    concatenated.extend_from_slice(&val15.1);
-    concatenated.extend_from_slice(&val16.1);
-    concatenated.extend_from_slice(&val17.1);
-    concatenated.extend_from_slice(&val18.1);
-    concatenated.extend_from_slice(&val19.1);
-    concatenated.extend_from_slice(&val20.1);
-    concatenated.extend_from_slice(&val21.1);
-    concatenated.extend_from_slice(&val22.1);
-    concatenated.extend_from_slice(&val23.1);
-    concatenated.extend_from_slice(&val24.1);
-    concatenated.extend_from_slice(&val25.1);
+    concatenated.extend_from_slice(&padd_bytes32(val10.1));
+    concatenated.extend_from_slice(&padd_bytes32(val11.1));
+    concatenated.extend_from_slice(&padd_bytes32(val12.1));
+    concatenated.extend_from_slice(&padd_bytes32(val13.1));
+    concatenated.extend_from_slice(&padd_bytes32(val14.1));
+    concatenated.extend_from_slice(&padd_bytes32(val15.1));
+    concatenated.extend_from_slice(&padd_bytes32(val16.1));
+    concatenated.extend_from_slice(&padd_bytes32(val17.1));
+    concatenated.extend_from_slice(&padd_bytes32(val18.1));
+    concatenated.extend_from_slice(&padd_bytes32(val19.1));
+    concatenated.extend_from_slice(&padd_bytes32(val20.1));
+    concatenated.extend_from_slice(&padd_bytes32(val21.1));
+    concatenated.extend_from_slice(&padd_bytes32(val22.1));
+    concatenated.extend_from_slice(&padd_bytes32(val23.1));
+    concatenated.extend_from_slice(&padd_bytes32(val24.1));
 
     hasher4.update(&concatenated);
 
@@ -245,9 +223,6 @@ pub fn compute_challenges(
     hasher4.finalize(&mut out);
     let _alpha = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
     let alpha = Fr::from_str(&_alpha.to_string()).unwrap();
-
-    // println!("_alpha: {:?}", _alpha); 
-    // println!("alpha: {:?}", alpha.to_string());
 
     //y
     let mut hasher5 = Keccak::v256();
@@ -258,9 +233,9 @@ pub fn compute_challenges(
     let val28 = get_proog_bigint().w1.1.to_bytes_be();
 
     concatenated = Vec::new();
-    concatenated.extend_from_slice(&val26.1);
-    concatenated.extend_from_slice(&val27.1);
-    concatenated.extend_from_slice(&val28.1);
+    concatenated.extend_from_slice(&padd_bytes32(val26.1));
+    concatenated.extend_from_slice(&padd_bytes32(val27.1));
+    concatenated.extend_from_slice(&padd_bytes32(val28.1));
 
     hasher5.update(&concatenated);
     out = [0u8; 32];
@@ -318,7 +293,7 @@ pub fn calculateInversions(
     let mut w = y
         .sub(h1w4[0])
         .mul(y.sub(h1w4[1]).mul(y.sub(h1w4[2]).mul(y.sub(h1w4[3]))));
-    println!("w: {}", (w));
+    // println!("w: {}", (w));
 
     let denH1 = w.clone();
 
@@ -328,7 +303,7 @@ pub fn calculateInversions(
             .mul(y.sub(h3w3[0]).mul(y.sub(h3w3[1]).mul(y.sub(h3w3[2])))),
     );
 
-    println!("w: {}", (w));
+    // println!("w: {}", (w));
 
     let denH2 = w.clone();
 
@@ -343,7 +318,7 @@ pub fn calculateInversions(
 
     let mut eval_l1 = get_domain_size().mul(xi.sub(w));
 
-    println!("eval_l1: {}", eval_l1);
+    // println!("eval_l1: {}", eval_l1);
 
     let invser_arr_resp = inverseArray(
         denH1,
@@ -436,7 +411,7 @@ pub fn computeLiS1(
         li_s1_inv[i] = den1.mul(den2).mul(den3);
     }
 
-    println!("li_s1_inv: {}", li_s1_inv[3]);
+    // println!("li_s1_inv: {}", li_s1_inv[3]);
     li_s1_inv
 }
 
@@ -537,7 +512,7 @@ pub fn inverseArray(
     inv = acc.mul(_acc.last().unwrap().clone());
     acc = acc.mul(eval_l1.clone());
     *eval_l1 = inv;
-    println!("herer eval_l1: {}", eval_l1);
+    // println!("herer eval_l1: {}", eval_l1);
 
     for i in (0..6).rev() {
         _acc.pop();
@@ -577,10 +552,10 @@ pub fn inverseArray(
 
     local_zh_inv = acc;
 
-    println!("ls_s0_inv_0: {}", local_li_s0_inv[0]);
-    println!("ls_s0_inv_8: {}", local_li_s0_inv[7]);
-    println!("ls_s1_inv_0: {}", local_li_s1_inv[0]);
-    println!("ls_s1_inv_4: {}", local_li_s1_inv[3]);
+    // println!("ls_s0_inv_0: {}", local_li_s0_inv[0]);
+    // println!("ls_s0_inv_8: {}", local_li_s0_inv[7]);
+    // println!("ls_s1_inv_0: {}", local_li_s1_inv[0]);
+    // println!("ls_s1_inv_4: {}", local_li_s1_inv[3]);
 
     let lis_values = LISValues {
         li_s0_inv: local_li_s0_inv,
@@ -749,11 +724,7 @@ pub fn verify(proof: Proof) -> bool {
     let denH1 = inv_tuple.2;
     let denH2 = inv_tuple.3;
 
-    println!("eval_l1: {}", eval_l1);
-
     eval_l1 = compute_lagrange(zh, eval_l1);
-
-    println!("Final lagrange eval_l1: {}", eval_l1);
 
     let pi = computePi(get_pubSignals(), eval_l1);
 
@@ -926,8 +897,6 @@ fn calculateR0(
     num = num.mul(y__8);
     num = num.add(-xi);
 
-    println!("num: {:?}", num.to_string());
-
     let mut h0w80 = h0w8[0];
     let pH0w8_1_term = h0w8[1];
     let pH0w8_2_term = h0w8[2];
@@ -947,7 +916,6 @@ fn calculateR0(
     let pLiS0Inv_224_term = li_s0_inv[7];
 
     let mut c0Value = eval_ql.add(h0w80.mul(eval_qr));
-    println!("c0Value: {:?}", c0Value.to_string());
 
     let mut h0w8i = h0w80.mul(h0w80);
     c0Value = c0Value.add(eval_qo.mul(h0w8i));
@@ -968,8 +936,6 @@ fn calculateR0(
     c0Value = c0Value.add(eval_s3.mul(h0w8i));
 
     let res = c0Value.mul(num.mul(pLiS0Inv_term));
-
-    println!("res: {:?}", res.to_string());
 
     h0w80 = pH0w8_1_term;
     c0Value = eval_ql.add(h0w80.mul(eval_qr));
@@ -994,8 +960,6 @@ fn calculateR0(
 
     let res_2 = res.add(c0Value.mul(num.mul(pLiS0Inv_32_term)));
 
-    println!("res_2: {:?}", res_2.to_string());
-
     h0w80 = pH0w8_2_term;
     c0Value = eval_ql.add(h0w80.mul(eval_qr));
 
@@ -1018,7 +982,6 @@ fn calculateR0(
     c0Value = c0Value.add(eval_s3.mul(h0w8i));
 
     let res_3 = res_2.add(c0Value.mul(num.mul(pLiS0Inv_64_term)));
-    println!("res_3: {:?}", res_3.to_string());
 
     h0w80 = pH0w8_3_term;
     c0Value = eval_ql.add(h0w80.mul(eval_qr));
@@ -1042,7 +1005,6 @@ fn calculateR0(
     c0Value = c0Value.add(eval_s3.mul(h0w8i));
 
     let res_4 = res_3.add(c0Value.mul(num.mul(pLiS0Inv_96_term)));
-    println!("res_4: {:?}", res_4.to_string());
 
     h0w80 = pH0w8_4_term;
     c0Value = eval_ql.add(h0w80.mul(eval_qr));
@@ -1066,7 +1028,6 @@ fn calculateR0(
     c0Value = c0Value.add(eval_s3.mul(h0w8i));
 
     let res_5 = res_4.add(c0Value.mul(num.mul(pLiS0Inv_128_term)));
-    println!("res_5: {:?}", res_5.to_string());
 
     h0w80 = pH0w8_5_term;
     c0Value = eval_ql.add(h0w80.mul(eval_qr));
@@ -1090,7 +1051,6 @@ fn calculateR0(
     c0Value = c0Value.add(eval_s3.mul(h0w8i));
 
     let res_6 = res_5.add(c0Value.mul(num.mul(pLiS0Inv_160_term)));
-    println!("res_6: {:?}", res_6.to_string());
 
     h0w80 = pH0w8_6_term;
     c0Value = eval_ql.add(h0w80.mul(eval_qr));
@@ -1114,7 +1074,6 @@ fn calculateR0(
     c0Value = c0Value.add(eval_s3.mul(h0w8i));
 
     let res_7 = res_6.add(c0Value.mul(num.mul(pLiS0Inv_192_term)));
-    println!("res_7: {:?}", res_7.to_string());
 
     h0w80 = pH0w8_7_term;
     c0Value = eval_ql.add(h0w80.mul(eval_qr));
@@ -1138,7 +1097,6 @@ fn calculateR0(
     c0Value = c0Value.add(eval_s3.mul(h0w8i));
 
     let res_8 = res_7.add(c0Value.mul(num.mul(pLiS0Inv_224_term)));
-    println!("res_8 r0 wala: {:?}", res_8.to_string());
 
     res_8
 }
@@ -1180,20 +1138,12 @@ fn calculateR1(
     num = num.add(-xi);
 
     let mut t0 = eval_ql.mul(eval_a);
-    println!("t0 1: {:?}", t0.to_string());
     t0 = t0.add(eval_qr.mul(eval_b));
-    println!("t0 2: {:?}", t0.to_string());
     t0 = t0.add(eval_qm.mul(eval_a.mul(eval_b)));
-    println!("t0 3: {:?}", t0.to_string());
     t0 = t0.add(eval_qo.mul(eval_c));
-    println!("t0 4: {:?}", t0.to_string());
     t0 = t0.add(eval_qc);
-    println!("t0 5: {:?}", t0.to_string());
     t0 = t0.add(pi);
-    println!("t0 6: {:?}", t0.to_string());
     t0 = t0.mul(zinv);
-
-    println!("t0: {:?}", t0.to_string());
 
     let mut c1Value = eval_a;
     c1Value = c1Value.add(H1w4_0.mul(eval_b));
@@ -1202,7 +1152,6 @@ fn calculateR1(
     c1Value = c1Value.add(t0.mul(square.mul(H1w4_0)));
 
     let res_1 = c1Value.mul(num.mul(pLiS1Inv_0_term));
-    println!("res_1: {:?}", res_1.to_string());
 
     c1Value = eval_a;
     c1Value = c1Value.add(H1w4_1.mul(eval_b));
@@ -1211,7 +1160,6 @@ fn calculateR1(
     c1Value = c1Value.add(t0.mul(square.mul(H1w4_1)));
 
     let res_2 = res_1.add(c1Value.mul(num.mul(pLiS1Inv_32_term)));
-    println!("res_2: {:?}", res_2.to_string());
     // pLiS1Inv_32_term
 
     c1Value = eval_a;
@@ -1221,7 +1169,6 @@ fn calculateR1(
     c1Value = c1Value.add(t0.mul(square.mul(H1w4_2)));
 
     let res_3 = res_2.add(c1Value.mul(num.mul(pLiS1Inv_64_term)));
-    println!("res_3: {:?}", res_3.to_string());
 
     c1Value = eval_a;
     c1Value = c1Value.add(H1w4_3.mul(eval_b));
@@ -1230,7 +1177,6 @@ fn calculateR1(
     c1Value = c1Value.add(t0.mul(square.mul(H1w4_3)));
 
     let res_4 = res_3.add(c1Value.mul(num.mul(pLiS1Inv_96_term)));
-    println!("res_4 r1 wala: {:?}", res_4.to_string());
 
     res_4
 }
@@ -1302,22 +1248,15 @@ fn calculateR2(
     num2 = xi.mul(xi.mul(w1));
     num = num.add(num2);
 
-    println!("num  1 : {:?}", num.to_string());
-    println!("num2: {:?}", num2.to_string());
-
     let mut t2 = eval_a.add(betaxi.add(gamma));
     t2 = t2.mul(eval_b.add(gamma.add(betaxi.mul(k1))));
     t2 = t2.mul(eval_c.add(gamma.add(betaxi.mul(k2))));
     t2 = t2.mul(eval_z);
 
-    println!("t2: {:?}", t2.to_string());
-
     let mut t1 = eval_a.add(gamma.add(beta.mul(eval_s1)));
     t1 = t1.mul(eval_b.add(gamma.add(beta.mul(eval_s2))));
     t1 = t1.mul(eval_c.add(gamma.add(beta.mul(eval_s3))));
     t1 = t1.mul(eval_zw);
-
-    println!("t1: {:?}", t1.to_string());
 
     t2 = t2.sub(t1);
     t2 = t2.mul(zinv);
@@ -1326,50 +1265,36 @@ fn calculateR2(
     t1 = t1.mul(eval_l1);
     t1 = t1.mul(zinv);
 
-    println!("t1: {:?}", t1.to_string());
-
     let mut gamma_r2 = Fr::zero();
     let mut hw = h2w3_0;
     let mut c2Value = eval_z.add(hw.mul(t1));
     c2Value = c2Value.add(t2.mul(hw.mul(hw)));
     gamma_r2 = gamma_r2.add(c2Value.mul(num.mul(pLiS2Inv_0_term)));
 
-    println!("gamma_r2 0 : {:?}", gamma_r2.to_string());
-
     hw = h2w3_1;
     c2Value = eval_z.add(hw.mul(t1));
     c2Value = c2Value.add(t2.mul(hw.mul(hw)));
     gamma_r2 = gamma_r2.add(c2Value.mul(num.mul(pLiS2Inv_32_term)));
-
-    println!("gamma_r2 1 : {:?}", gamma_r2.to_string());
 
     hw = h2w3_2;
     c2Value = eval_z.add(hw.mul(t1));
     c2Value = c2Value.add(t2.mul(hw.mul(hw)));
     gamma_r2 = gamma_r2.add(c2Value.mul(num.mul(pLiS2Inv_64_term)));
 
-    println!("gamma_r2 2 : {:?}", gamma_r2.to_string());
-
     hw = h3w3_0;
     c2Value = eval_zw.add(hw.mul(eval_t1w));
     c2Value = c2Value.add(eval_t2w.mul(hw.mul(hw)));
     gamma_r2 = gamma_r2.add(c2Value.mul(num.mul(pLiS2Inv_96_term)));
-
-    println!("gamma_r2 3 : {:?}", gamma_r2.to_string());
 
     hw = h3w3_1;
     c2Value = eval_zw.add(hw.mul(eval_t1w));
     c2Value = c2Value.add(eval_t2w.mul(hw.mul(hw)));
     gamma_r2 = gamma_r2.add(c2Value.mul(num.mul(pLiS2Inv_128_term)));
 
-    println!("gamma_r2 4 : {:?}", gamma_r2.to_string());
-
     hw = h3w3_2;
     c2Value = eval_zw.add(hw.mul(eval_t1w));
     c2Value = c2Value.add(eval_t2w.mul(hw.mul(hw)));
     gamma_r2 = gamma_r2.add(c2Value.mul(num.mul(pLiS2Inv_160_term)));
-
-    println!("gamma_r2 5: {:?}", gamma_r2.to_string());
 
     gamma_r2
 }
@@ -1466,4 +1391,13 @@ fn computeFEJ(
     // min + 64 -> 0
     // min + 96 -> 0
     (c2_agg, g1_acc, w1_agg)
+}
+
+
+pub fn padd_bytes32(input: Vec<u8>) -> Vec<u8> {
+    let mut result = input.clone();
+    let mut padding = vec![0; 32 - input.len()];
+    padding.append(&mut result);
+    // result.append(&mut padding);
+    padding
 }
