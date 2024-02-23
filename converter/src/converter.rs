@@ -26,7 +26,8 @@ struct proofInput<> {
 }
 
 
-pub async fn converter(pr_updated: Vec<String>, signal: String) -> SnarkReceipt {
+pub fn converter_fflonk_to_groth16(pr_updated: Vec<String>, signal: String) -> SnarkReceipt {
+    println!("Converter: {:?}", pr_updated);
     // let pr = vec![
     //     "12195165594784431822497303968938621279445690754376121387655513728730220550454",
     //     "19482351300768228183728567743975524187837254971200066453308487514712354412818",
@@ -87,12 +88,14 @@ pub async fn converter(pr_updated: Vec<String>, signal: String) -> SnarkReceipt 
 
     // config for using bonsai for proving
 
-    let url = "url".to_string();
-    let api_key = "key".to_string();
+    let url = "https://api.bonsai.xyz/".to_string();
+    let api_key = "JdRSXY9tV47TkxmQr8Rje9efJT0WWxLG1Q3yMYFc".to_string();
     let client = bonsai_sdk::Client::from_parts(url, api_key, risc0_zkvm::VERSION)
         .expect("Failed to construct sdk client");
+    println!("Reached here");
 
     let image_id = hex::encode(compute_image_id(VERIFIER_ELF).unwrap());
+    println!("Image ID done: {}", image_id);
     client.upload_img(&image_id, VERIFIER_ELF.to_vec()).unwrap();
 
     println!("Image ID: {}", image_id);
