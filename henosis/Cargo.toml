@@ -1,6 +1,17 @@
 [package]
-name = "aggregator"
+name = "henosis"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ethabi = "18.0.0"
+# ethers = "2.0.13"
+ethers = { version = "2.0.13", features = ["ws" ] }
+queues = "1.1.0"
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.17", features = ["native-tls"] }
+websocket = "0.27.0"
+sha256 = "1.5.0"
+num-bigint = "0.4.4"
+ark-bn254 = "0.3.0"
+regex = "1"
