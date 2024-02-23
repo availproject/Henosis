@@ -2,7 +2,7 @@
 use risc0_zkvm::guest::env;
 // use plonk_verifier::verifier::verifier::verify;
 use fflonk_verifier::verifier::verify;
-use fflonk_verifier::utils::{G1Point, Proof};
+use fflonk_verifier::utils::{G1Point, Proof, ProofWithPubSignal};
 // use ark_bn254::{g1, g1::Parameters, Bn254, FqParameters, Fr, FrParameters, G1Projective};
 // use ark_ec::short_weierstrass_jacobian::GroupAffine;
 // use ark_ff::{Field, Fp256, Fp256Parameters, One, PrimeField, UniformRand, Zero};
@@ -23,7 +23,8 @@ risc0_zkvm::guest::entry!(main);
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 struct proofInput {
-    input: Vec<String>
+    input: Vec<String>,
+    signal: String
 }
 
 
@@ -93,7 +94,12 @@ fn main() {
         eval_inv: Fr::from_str(pr[23]).unwrap(),
     };
 
-    let isVerifierd: bool = verify(proof);
+    let proof_with_pub_signal = ProofWithPubSignal {
+        proof: proof,
+        pub_signal: Fr::from_str(proof_input.signal.as_str()).unwrap(),
+    };
+
+    let isVerifierd: bool = verify(proof_with_pub_signal);
 
     env::log(&format!("IsVerified {}", isVerifierd));
     env::commit(&isVerifierd);

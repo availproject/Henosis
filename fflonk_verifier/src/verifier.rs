@@ -1,4 +1,4 @@
-pub use crate::utils::{get_domain_size, get_omegas, get_proof, get_pubSignals, Omegas, Proof};
+pub use crate::utils::{get_domain_size, get_omegas, get_proof, get_pubSignals, Omegas, Proof, ProofWithPubSignal};
 use ark_bn254::{
     g1, g1::Parameters, Bn254, Fq, FqParameters, Fr, FrParameters, G1Projective, G2Projective,
 };
@@ -94,7 +94,6 @@ pub fn compute_challenges(
     let _beta = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
 
     let beta = Fr::from_str(&_beta.to_string()).unwrap();
-
 
     //gamma
     hasher = Keccak::v256();
@@ -556,11 +555,6 @@ pub fn inverseArray(
 
     local_zh_inv = acc;
 
-    // println!("ls_s0_inv_0: {}", local_li_s0_inv[0]);
-    // println!("ls_s0_inv_8: {}", local_li_s0_inv[7]);
-    // println!("ls_s1_inv_0: {}", local_li_s1_inv[0]);
-    // println!("ls_s1_inv_4: {}", local_li_s1_inv[3]);
-
     let lis_values = LISValues {
         li_s0_inv: local_li_s0_inv,
         li_s1_inv: local_li_s1_inv,
@@ -571,8 +565,9 @@ pub fn inverseArray(
     // println!("local_zh_inv: {}", local_zh_inv);
 }
 
-pub fn verify(proof: Proof) -> bool {
-    let proof = get_proof();
+pub fn verify(proof_with_pub_signal: ProofWithPubSignal) -> bool {
+    let proof = proof_with_pub_signal.proof;
+    let pub_signal = proof_with_pub_signal.pub_signal;
 
     let mut challenges = Challenges {
         alpha: Fr::zero(),
@@ -670,7 +665,7 @@ pub fn verify(proof: Proof) -> bool {
 
     eval_l1 = compute_lagrange(*zh, eval_l1);
 
-    let pi = computePi(get_pubSignals(), eval_l1);
+    let pi = computePi(pub_signal, eval_l1);
 
     println!("Verifying proof...");
 
