@@ -55,6 +55,7 @@ fn main() {
         let hash = logs.next().await.unwrap().transaction_hash;
         hash
     }) {
+        println!("Transaction Hash: {:?}", txn_hash);
         let sample_hash =
             H256::from_str("0xed0c28abb022be570305ae3cd454c5c3bb027ede55cfdefe6744bc1b5af90d8a")
                 .unwrap();
@@ -144,7 +145,7 @@ fn main() {
                 let public_2_bigint_string = public_2_bigint.to_string();
                 let public_3_bigint_string = public_3_bigint.to_string();
 
-                let snark = run(
+                let _ = run(
                     a_0_bigint_string,
                     a_1_bigint_string,
                     b_0_0_bigint_string,
@@ -160,6 +161,7 @@ fn main() {
                 );
 
                 // println!("a 0 {:?}", a_0_bigint);
+                println!("Aggregated 2 proofs");
 
                 println!("Proofs: {:?}", proof_queues);
                 let _ = proof_queues.remove();
