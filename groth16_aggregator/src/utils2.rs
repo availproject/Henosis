@@ -70,33 +70,69 @@ pub struct Proof {
 }
 
 
-pub fn get_dummy_proof2() -> Proof {
+pub fn get_dummy_proof2(
+    a_0_bigint_string: String,
+    a_1_bigint_string: String,
+    b_0_0_bigint_string: String,
+    b_0_1_bigint_string: String,
+    b_1_0_bigint_string: String,
+    b_1_1_bigint_string: String,
+    c_0_bigint_string: String,
+    c_1_bigint_string: String,
+    public_0_bigint_string: String,
+    public_1_bigint_string: String,
+    public_2_bigint_string: String,
+    public_3_bigint_string: String,
+) -> Proof {
     // [13260276032418998651443538824193049589123114956926792946594134764022000816562, 5167640230539274142304274045727640058373784936329623387968009881859270794902]
     // [[10567087324407133650922565101452207841667968057317044436605321405883373098510, 7757803224683569033741736680656787451157316953083975465016761210409447042085], [457572965494851714920701078104055244867150196245707373658530988008746205753, 4154698842299342687716733663963774183350245344082643024876568733757548954572]]
     // [912029144283342253430074020875773320940610572316000372447554232903960396096, 18905415622575708886101027892832048186612990562549466021443631829394831237150]
     // [91039097843120449453449593822342807849, 24946934259622365010039737625873252857, 112589930430490045473610947510778658730, 251605118307091288206921779862202882788]
+    
     Proof {
         a: G1Affine{
-            x: bn256::Fq::from_str_vartime("13260276032418998651443538824193049589123114956926792946594134764022000816562").unwrap(),
-            y: bn256::Fq::from_str_vartime("5167640230539274142304274045727640058373784936329623387968009881859270794902").unwrap()
+            x: bn256::Fq::from_str_vartime(&a_0_bigint_string).unwrap(),
+            y: bn256::Fq::from_str_vartime(&a_1_bigint_string).unwrap()
         }, 
         b: G2Affine{
             x: bn256::Fq2::new(
-                bn256::Fq::from_str_vartime("7757803224683569033741736680656787451157316953083975465016761210409447042085").unwrap(),
-                bn256::Fq::from_str_vartime("10567087324407133650922565101452207841667968057317044436605321405883373098510").unwrap()
+                bn256::Fq::from_str_vartime(&b_0_0_bigint_string).unwrap(),
+                bn256::Fq::from_str_vartime(&b_0_1_bigint_string).unwrap()
             ), 
             y: bn256::Fq2::new(
-                bn256::Fq::from_str_vartime("4154698842299342687716733663963774183350245344082643024876568733757548954572").unwrap(),
-                bn256::Fq::from_str_vartime("457572965494851714920701078104055244867150196245707373658530988008746205753").unwrap()
+                bn256::Fq::from_str_vartime(&b_1_0_bigint_string).unwrap(),
+                bn256::Fq::from_str_vartime(&b_1_1_bigint_string).unwrap()
             )
         },
         c: G1Affine{
-            x: bn256::Fq::from_str_vartime("912029144283342253430074020875773320940610572316000372447554232903960396096").unwrap(),
-            y: bn256::Fq::from_str_vartime("18905415622575708886101027892832048186612990562549466021443631829394831237150").unwrap()
+            x: bn256::Fq::from_str_vartime(&c_0_bigint_string).unwrap(),
+            y: bn256::Fq::from_str_vartime(&c_1_bigint_string).unwrap()
         },
-        public_inputs: [String::from("91039097843120449453449593822342807849"), String::from("24946934259622365010039737625873252857"), String::from("112589930430490045473610947510778658730"), String::from("251605118307091288206921779862202882788")].to_vec()
-
+        public_inputs: vec![public_0_bigint_string, public_1_bigint_string, public_2_bigint_string, public_3_bigint_string]
     }
+    
+    // Proof {
+    //     a: G1Affine{
+    //         x: bn256::Fq::from_str_vartime("13260276032418998651443538824193049589123114956926792946594134764022000816562").unwrap(),
+    //         y: bn256::Fq::from_str_vartime("5167640230539274142304274045727640058373784936329623387968009881859270794902").unwrap()
+    //     }, 
+    //     b: G2Affine{
+    //         x: bn256::Fq2::new(
+    //             bn256::Fq::from_str_vartime("7757803224683569033741736680656787451157316953083975465016761210409447042085").unwrap(),
+    //             bn256::Fq::from_str_vartime("10567087324407133650922565101452207841667968057317044436605321405883373098510").unwrap()
+    //         ), 
+    //         y: bn256::Fq2::new(
+    //             bn256::Fq::from_str_vartime("4154698842299342687716733663963774183350245344082643024876568733757548954572").unwrap(),
+    //             bn256::Fq::from_str_vartime("457572965494851714920701078104055244867150196245707373658530988008746205753").unwrap()
+    //         )
+    //     },
+    //     c: G1Affine{
+    //         x: bn256::Fq::from_str_vartime("912029144283342253430074020875773320940610572316000372447554232903960396096").unwrap(),
+    //         y: bn256::Fq::from_str_vartime("18905415622575708886101027892832048186612990562549466021443631829394831237150").unwrap()
+    //     },
+    //     public_inputs: [String::from("91039097843120449453449593822342807849"), String::from("24946934259622365010039737625873252857"), String::from("112589930430490045473610947510778658730"), String::from("251605118307091288206921779862202882788")].to_vec()
+
+    // }
 }
 
 
@@ -173,11 +209,11 @@ pub fn get_verification_key2() -> VerificationKey {
 
 #[test]
 
-fn test_proof() {
-    println!("{:?}", get_dummy_proof2().a.is_on_curve());
-    println!("{:?}", get_dummy_proof2().b.is_on_curve());
-    println!("{:?}", get_dummy_proof2().c.is_on_curve());
-}
+// fn test_proof() {
+//     println!("{:?}", get_dummy_proof2().a.is_on_curve());
+//     println!("{:?}", get_dummy_proof2().b.is_on_curve());
+//     println!("{:?}", get_dummy_proof2().c.is_on_curve());
+// }
 
 #[test]
 fn test_verification_key() {

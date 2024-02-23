@@ -96,7 +96,8 @@ pub fn get_dummy_proof() -> Proof {
 
 
 
-pub fn get_verification_key() -> VerificationKey {
+pub fn get_verification_key(
+) -> VerificationKey {
     VerificationKey {
 
         alpha1: G1Affine{
