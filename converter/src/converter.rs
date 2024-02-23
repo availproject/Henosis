@@ -20,13 +20,13 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-struct proofInput<> {
-    input: Vec<String>,
-    signal: String
+struct ProofInput {
+    input: [Vec<String>; 2],
+    signal: [String; 2]
 }
 
 
-pub fn converter_fflonk_to_groth16(pr_updated: Vec<String>, signal: String) -> SnarkReceipt {
+pub fn converter_fflonk_to_groth16(pr_updated: [Vec<String>; 2], signal: [String; 2]) -> SnarkReceipt {
     println!("Converter: {:?}", pr_updated);
     // let pr = vec![
     //     "12195165594784431822497303968938621279445690754376121387655513728730220550454",
@@ -57,7 +57,7 @@ pub fn converter_fflonk_to_groth16(pr_updated: Vec<String>, signal: String) -> S
 
     // let pr_updated = pr.iter().map(|x| x.to_string()).collect::<Vec<String>>();
 
-    let proof_input = proofInput {
+    let proof_input = ProofInput {
         input: pr_updated,
         signal
     };

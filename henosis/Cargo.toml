@@ -17,3 +17,4 @@ ark-bn254 = "0.3.0"
 regex = "1"
 fflonk_verifier = { path = "../fflonk_verifier" }
 converter = { path = "../converter" }
+groth16_aggregator = { path = "../groth16_aggregator" }
