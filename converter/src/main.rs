@@ -83,8 +83,8 @@ fn main() {
 
     // config for using bonsai for proving
 
-    let url = "url".to_string();
-    let api_key = "key".to_string();
+    let url = "https://api.bonsai.xyz/".to_string();
+    let api_key = "JdRSXY9tV47TkxmQr8Rje9efJT0WWxLG1Q3yMYFc".to_string();
     let client = bonsai_sdk::Client::from_parts(url, api_key, risc0_zkvm::VERSION)
         .expect("Failed to construct sdk client");
 

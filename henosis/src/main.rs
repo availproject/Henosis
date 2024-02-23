@@ -6,32 +6,35 @@ use ethers::utils::hex;
 use num_bigint::*;
 use queues::*;
 use sha256::digest;
-use std::convert::TryFrom;
+use std::convert::{self, TryFrom};
 use std::str::FromStr;
 use std::sync::Arc;
-pub use henosis::fetcher::fetch_proof_and_pub_signal;
+pub use henosis::fetcher::{fetch_proof_and_pub_signal, ProofValue};
 use fflonk_verifier::utils::ProofWithPubSignal;
-use std::{thread, time};
-use converter::converter;
+use std::{thread::{sleep}, time};
+use converter::converter::converter_fflonk_to_groth16;
+use tokio;
+use tokio::runtime::Runtime;
+use tokio::task;
 
-#[derive(Debug, Clone)]
-struct ProofValue {
-    proof: Vec<String>,
-    pub_signal: String,
-}
+// #[tokio::main]
+fn main() {    
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {    
+    let rt = Runtime::new().unwrap();
 
     let POLYGON_ZKEVM_PROXY: Address = "0x5132A183E9F3CB7C848b0AAC5Ae0c4f0491B7aB2"
     .parse()
     .expect("Invalid contract address");
 
-    let provider = Provider::<Ws>::connect(
-        "wss://eth-mainnet.ws.alchemyapi.io/v2/nrzrNIfp7oG61YHAmoPAICuibjwqeHmN",
-    )
-    .await
-    .unwrap();
+    let provider = rt.block_on(async {
+        let provider = Provider::<Ws>::connect(
+            "wss://eth-mainnet.ws.alchemyapi.io/v2/nrzrNIfp7oG61YHAmoPAICuibjwqeHmN",
+        )
+        .await
+        .unwrap();
+        provider
+    });
+
 
     let http_provider = Provider::<Http>::try_from(
         "https://eth-mainnet.ws.alchemyapi.io/v2/nrzrNIfp7oG61YHAmoPAICuibjwqeHmN",
@@ -42,33 +45,85 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let filter = Filter::new().address(vec![POLYGON_ZKEVM_PROXY]);
 
-    let mut logs = provider.subscribe_logs(&filter).await?;
+    let mut logs = rt.block_on(async {
+        let log = provider.subscribe_logs(&filter).await.unwrap();
+        log
+    });
+    
 
     println!("Henosis Proof Aggregator Listening for Proofs!!");
 
-    while let Some(txn_hash) = logs.next().await.unwrap().transaction_hash {
-        println!("Listened Hash: {:?}", txn_hash);
+    // while let Some(txn_hash) = logs.next().await.unwrap().transaction_hash {
+        // println!("Listened Hash: {:?}", txn_hash);
 
-        let tx: Transaction = http_provider.get_transaction(txn_hash).await.unwrap().unwrap();
+        let sample_hash = H256::from_str("0xed0c28abb022be570305ae3cd454c5c3bb027ede55cfdefe6744bc1b5af90d8a").unwrap();
+
+        // let get_txn_handle = tokio::spawn(http_provider.clone().get_transaction(sample_hash));
+
+        // let tx: Transaction = get_txn_handle.await.unwrap().unwrap().unwrap();
+        let tx: Transaction = rt.block_on(async {
+            let tx: Transaction = http_provider.get_transaction(sample_hash).await.unwrap().unwrap();
+            tx
+        });
+        
+        
         // console.log(tx);
-        println!("Transaction: {:?}", tx);
         if tx.to.unwrap() == POLYGON_ZKEVM_PROXY {
-            let proof = fetch_proof_and_pub_signal(txn_hash).await;
-            let _ = proof_queues.add(ProofValue {
-                proof: proof.0,
-                pub_signal: proof.1,
+            // let _fetch_handle = tokio::spawn(fetch_proof_and_pub_signal(sample_hash));
+
+            // let _proof = _fetch_handle.await.unwrap();
+
+            let _proof = rt.block_on(async {
+                let proof = fetch_proof_and_pub_signal(sample_hash).await;
+                proof
             });
+
+            // let _proof = fetch_proof_and_pub_signal(sample_hash).await;
+            println!("Proof: {:?}", _proof);
+            let _ = proof_queues.add(ProofValue {
+                proof: _proof.0,
+                pub_signal: _proof.1,
+            });
+            println!("Transaction: {:?}", tx);
 
             if proof_queues.size() == 1 {
                 // perform aggregation
+                println!("Inside queue !!");
                 let proof = proof_queues.peek().unwrap();
-                let receipt = converter(proof.0, proof.1).await.unwrap();
+                println!("Proof sinside quque !!: {:?}", proof);
+
+                // let convert_proof_rt = tokio::spawn(converter_fflonk_to_groth16(proof.proof, proof.pub_signal));
+                // let receipt = convert_proof_rt.await.unwrap();
+
+                // let convert_proof_rt = tokio::spawn(converter_fflonk_to_groth16(proof.proof, proof.pub_signal));
+                // rt.block_on(async {
+                //     let receipt = converter_fflonk_to_groth16(proof.proof, proof.pub_signal);
+                //     println!("Receipt: {:?}", receipt);
+                // });
+
+                rt.block_on(async {
+                    let _ = task::spawn_blocking(|| {
+                        let receipt = converter_fflonk_to_groth16(proof.proof, proof.pub_signal);
+                        println!("Receipt: {:?}", receipt);
+                    });
+                });
+
+
+                // let receipt = converter_fflonk_to_groth16(proof.proof, proof.pub_signal);
+
+                // sleep(time::Duration::from_secs(5000));
+ 
+
+                // convert_proof_rt.await.unwrap();
+                // println!("Receipt: {:?}", receipt);
+                // convert_proof(proof).await;
+                // let receipt = converter_fflonk_to_groth16(proof.proof, proof.pub_signal).await;
                 println!("Proofs: {:?}", proof_queues);
                 let _ = proof_queues.remove();
-                let _ = proof_queues.remove();
+                // let _ = proof_queues.remove();
             }
         } 
-    }
+    // }
 
     // let sleep_duration = time::Duration::from_secs(1);
 
@@ -82,5 +137,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     thread::sleep(time::Duration::from_secs(60)); // Example: main thread does something else or just waits
     // }
 
-    Ok(())
+    // Ok(())
 }

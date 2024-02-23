@@ -10,6 +10,13 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 use std::sync::Arc;
 use fflonk_verifier::utils::{ProofWithPubSignal, construct_proof};
+use converter::converter::converter_fflonk_to_groth16;
+
+#[derive(Debug, Clone)]
+pub struct ProofValue {
+   pub proof: Vec<String>,
+   pub pub_signal: String,
+}
 
 pub async fn fetch_proof_and_pub_signal(txn_hash: H256) -> (Vec<String>, String) {
     let provider = Provider::<Ws>::connect(
@@ -207,3 +214,10 @@ pub async fn fetch_proof_and_pub_signal(txn_hash: H256) -> (Vec<String>, String)
 
     // proof_with_pub_signal
 }
+
+
+// pub async fn convert_proof(proof: ProofValue) {
+//     println!("Converting Proof...");
+//     let receipt = converter_fflonk_to_groth16(proof.proof, proof.pub_signal);
+//     // println!("Receipt: {:?}", receipt);
+// }
