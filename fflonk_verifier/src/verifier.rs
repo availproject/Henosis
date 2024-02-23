@@ -1159,10 +1159,7 @@ fn calculateR2(
     let w1 = get_omegas().w1;
     let mut num = Fr::from_str("1").unwrap();
 
-    let betaxi = Fr::from_str(
-        "15857722237427290894966863399309025470051084474506034024114905506714284882191",
-    )
-    .unwrap();
+    let betaxi = beta.mul(xi);
 
     let y__6 = y.pow([6]);
     let k1 = Fr::from_str("2").unwrap();
