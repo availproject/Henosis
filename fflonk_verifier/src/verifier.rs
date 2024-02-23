@@ -216,6 +216,7 @@ pub fn compute_challenges(
     concatenated.extend_from_slice(&padd_bytes32(val22.1));
     concatenated.extend_from_slice(&padd_bytes32(val23.1));
     concatenated.extend_from_slice(&padd_bytes32(val24.1));
+    concatenated.extend_from_slice(&padd_bytes32(val25.1));
 
     hasher4.update(&concatenated);
 
@@ -224,6 +225,7 @@ pub fn compute_challenges(
     let _alpha = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
     let alpha = Fr::from_str(&_alpha.to_string()).unwrap();
 
+    println!("alpha: {:?}", alpha.to_string());
     //y
     let mut hasher5 = Keccak::v256();
     let _alpha_string = alpha.to_string();
@@ -233,15 +235,17 @@ pub fn compute_challenges(
     let val28 = get_proog_bigint().w1.1.to_bytes_be();
 
     concatenated = Vec::new();
-    concatenated.extend_from_slice(&padd_bytes32(val26.1));
-    concatenated.extend_from_slice(&padd_bytes32(val27.1));
-    concatenated.extend_from_slice(&padd_bytes32(val28.1));
+    concatenated.extend_from_slice(&(val26.1));
+    concatenated.extend_from_slice(&(val27.1));
+    concatenated.extend_from_slice(&(val28.1));
 
     hasher5.update(&concatenated);
     out = [0u8; 32];
     hasher5.finalize(&mut out);
     let _y = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
     let y = Fr::from_str(&_y.to_string()).unwrap();
+
+    println!("y: {:?}", y.to_string());
 
     challenges.alpha = alpha;
     challenges.beta = beta;
@@ -569,55 +573,67 @@ pub fn inverseArray(
 
 pub fn verify(proof: Proof) -> bool {
     let proof = get_proof();
-    let alpha: Fp256<FrParameters> = Fr::from_str(
-        "7322047676393218637481338970179134619960969643173747239601962635317485088344",
-    )
-    .unwrap();
 
-    let beta: Fp256<FrParameters> =
-        Fr::from_str("555960103527329154567657609884853810354674391984649378679184507744444027027")
-            .unwrap();
+    let mut challenges = Challenges {
+        alpha: Fr::zero(),
+        beta: Fr::zero(),
+        gamma: Fr::zero(),
+        y: Fr::zero(),
+        xiSeed: Fr::zero(),
+        xiSeed2: Fr::zero(),
+        xi: Fr::zero(),
 
-    let gamma: Fp256<FrParameters> = Fr::from_str(
-        "6957574725743056350363256008332060958376811930570348194340253625274403224161",
-    )
-    .unwrap();
+    };
+    let mut roots = Roots {
+        h0w8: [Fr::zero(); 8],
+        h1w4: [Fr::zero(); 4],
+        h2w3: [Fr::zero(); 3],
+        h3w3: [Fr::zero(); 3],
+    };
+    let mut vpi = VerifierProcessedInputs {
+        c0x: BigInt::parse_bytes(b"7005013949998269612234996630658580519456097203281734268590713858661772481668", 10).unwrap(),
+        c0y: BigInt::parse_bytes(b"869093939501355406318588453775243436758538662501260653214950591532352435323", 10).unwrap(),
+        x2x1: BigInt::parse_bytes(b"21831381940315734285607113342023901060522397560371972897001948545212302161822", 10).unwrap(),
+        x2x2: BigInt::parse_bytes(b"17231025384763736816414546592865244497437017442647097510447326538965263639101", 10).unwrap(),
+        x2y1: BigInt::parse_bytes(b"2388026358213174446665280700919698872609886601280537296205114254867301080648", 10).unwrap(),
+        x2y2: BigInt::parse_bytes(b"11507326595632554467052522095592665270651932854513688777769618397986436103170", 10).unwrap(),
 
-    let xiseed: Fp256<FrParameters> = Fr::from_str(
-        "7896530194749115621350184803828649182986933409800667201245111721654183640928",
-    )
-    .unwrap();
+    };
 
-    let xiseed2: Fp256<FrParameters> = Fr::from_str(
-        "9144946180881585340800612715529400610463547442756395931665142563665450056128",
-    )
-    .unwrap();
+    let pubSignalBigInt = BigInt::parse_bytes(b"14516932981781041565586298118536599721399535462624815668597272732223874827152", 10).unwrap();
 
-    let y: Fp256<FrParameters> = Fr::from_str(
-        "13096643561003703188657823618924776735424142649986849213485512124502494958287",
-    )
-    .unwrap();
+    
+    let mut zh: &mut Fp256<FrParameters> = &mut Fr::zero();
 
-    let xi: Fp256<FrParameters> = Fr::from_str(
-        "10393185035615259318552712605767090377249145892581385744729012713520677048218",
-    )
-    .unwrap();
+    let mut zhinv: &mut Fp256<FrParameters> = &mut Fr::zero();
 
-    let zh: Fp256<FrParameters> = Fr::from_str(
-        "8663234610000964594764035144827003258323335914482598945994186647593190381653",
-    )
-    .unwrap();
+    compute_challenges(&mut challenges, &mut roots, &mut zh, &mut zhinv, vpi, pubSignalBigInt);
 
-    let mut zhinv: Fp256<FrParameters> = Fr::from_str(
-        "8663234610000964594764035144827003258323335914482598945994186647593190381653",
-    )
-    .unwrap();
+
+
+    let alpha: Fp256<FrParameters> = challenges.alpha;
+
+    let beta: Fp256<FrParameters> = challenges.beta;
+
+    let gamma: Fp256<FrParameters> = challenges.gamma;
+
+    let xiseed: Fp256<FrParameters> = challenges.xiSeed;
+
+    let xiseed2: Fp256<FrParameters> = challenges.xiSeed2;
+
+    let mut y: Fp256<FrParameters> = challenges.y;
+
+    let mut xi: Fp256<FrParameters> = challenges.xi;
+
+    // let zh: Fp256<FrParameters> = 
+
+    // let mut zhinv: Fp256<FrParameters> = Fr::from_str(
+    //     "8663234610000964594764035144827003258323335914482598945994186647593190381653",
+    // )
+    // .unwrap();
 
     // it is similar to zhinv just more updated value
-    let zinv = Fr::from_str(
-        "5003111610252004233397444097453114204704498339788572052799252538137556416518",
-    )
-    .unwrap();
+    let zinv = zhinv.clone();
 
     let g1_x = <G1Point as AffineCurve>::BaseField::from_str("1").unwrap();
 
@@ -630,90 +646,18 @@ pub fn verify(proof: Proof) -> bool {
     )
     .into_affine();
 
-    let h0w8: Vec<Fp256<FrParameters>> = vec![
-        Fr::from_str(
-            "6217280567245217757583020595539628144853576189258393757880925561134573660857",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "6467474964103268828445749503025875230771477005123038192746478572392917288085",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "17058617445718799367294447696955508815020408034987705203621830040667799234184",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "21316856612335037613757111596833720133546507460560319301014759512314160286103",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "15670962304594057464663385149717646943694788211157640585817278625441234834760",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "15420767907736006393800656242231399857776887395292996150951725614182891207532",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "4829625426120475854951958048301766273527956365428329140076374145908009261433",
-        )
-        .unwrap(),
-        Fr::from_str("571386259504237608489294148423554955001856939855715042683444674261648209514")
-            .unwrap(),
-    ];
+    let h0w8: Vec<Fp256<FrParameters>> = roots.h0w8.to_vec();
 
-    let h1w4: Vec<Fp256<FrParameters>> = vec![
-        Fr::from_str("19942750751199432676942609926442586439740980242021920220189719874523203538")
-            .unwrap(),
-        Fr::from_str(
-            "6070134217614975914195815562203672780869780328825257598131939473058160967520",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "21868300121088075789569463135330832502108623420174012423478014466701285292079",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "15818108654224299308050590183053602307678584071590776745566264713517647528097",
-        )
-        .unwrap(),
-    ];
+    let h1w4: Vec<Fp256<FrParameters>> = roots.h1w4.to_vec();
 
-    let h2w3: Vec<Fp256<FrParameters>> = vec![
-        Fr::from_str(
-            "1869756320377877312595498521504015597511420477452283464861296949200508189845",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "12855200334058046664672080384376966021199960394800133527288768963888158252355",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "7163286217403351244978826839376293469836983528163617351548138273487142053417",
-        )
-        .unwrap(),
-    ];
+    let h2w3: Vec<Fp256<FrParameters>> = roots.h2w3.to_vec();
 
-    let h3w3: Vec<Fp256<FrParameters>> = vec![
-        Fr::from_str(
-            "20221471501150487562916135566783003531433279751312695446481128041754069339168",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "5182315555253909512081724539694463779341668914354906154606878795853655230920",
-        )
-        .unwrap(),
-        Fr::from_str(
-            "18372698687274153369494951384037082866321780135164467086308401535543892421146",
-        )
-        .unwrap(),
-    ];
+    let h3w3: Vec<Fp256<FrParameters>> = roots.h3w3.to_vec();
 
     let mut inv_tuple = calculateInversions(
         y,
         xi,
-        zhinv,
+        *zhinv,
         h0w8.clone(),
         h1w4.clone(),
         h2w3.clone(),
@@ -724,7 +668,7 @@ pub fn verify(proof: Proof) -> bool {
     let denH1 = inv_tuple.2;
     let denH2 = inv_tuple.3;
 
-    eval_l1 = compute_lagrange(zh, eval_l1);
+    eval_l1 = compute_lagrange(*zh, eval_l1);
 
     let pi = computePi(get_pubSignals(), eval_l1);
 
@@ -817,47 +761,52 @@ pub fn verify(proof: Proof) -> bool {
     println!("Doing Pairing Check!");
     let x2_val = G2Affine::new(Fq2::new(x2x1, x2x2), Fq2::new(x2y1, x2y2), true);
 
-    let mut challenges = Challenges {
-        alpha: Fr::zero(),
-        beta: Fr::zero(),
-        gamma: Fr::zero(),
-        y: Fr::zero(),
-        xiSeed: Fr::zero(),
-        xiSeed2: Fr::zero(),
-        xi: Fr::zero(),
+    // let mut challenges = Challenges {
+    //     alpha: Fr::zero(),
+    //     beta: Fr::zero(),
+    //     gamma: Fr::zero(),
+    //     y: Fr::zero(),
+    //     xiSeed: Fr::zero(),
+    //     xiSeed2: Fr::zero(),
+    //     xi: Fr::zero(),
 
-    };
-    let mut roots = Roots {
-        h0w8: [Fr::zero(); 8],
-        h1w4: [Fr::zero(); 4],
-        h2w3: [Fr::zero(); 3],
-        h3w3: [Fr::zero(); 3],
-    };
-    let mut vpi = VerifierProcessedInputs {
-        c0x: BigInt::parse_bytes(b"7005013949998269612234996630658580519456097203281734268590713858661772481668", 10).unwrap(),
-        c0y: BigInt::parse_bytes(b"869093939501355406318588453775243436758538662501260653214950591532352435323", 10).unwrap(),
-        x2x1: BigInt::parse_bytes(b"21831381940315734285607113342023901060522397560371972897001948545212302161822", 10).unwrap(),
-        x2x2: BigInt::parse_bytes(b"17231025384763736816414546592865244497437017442647097510447326538965263639101", 10).unwrap(),
-        x2y1: BigInt::parse_bytes(b"2388026358213174446665280700919698872609886601280537296205114254867301080648", 10).unwrap(),
-        x2y2: BigInt::parse_bytes(b"11507326595632554467052522095592665270651932854513688777769618397986436103170", 10).unwrap(),
+    // };
+    // let mut roots = Roots {
+    //     h0w8: [Fr::zero(); 8],
+    //     h1w4: [Fr::zero(); 4],
+    //     h2w3: [Fr::zero(); 3],
+    //     h3w3: [Fr::zero(); 3],
+    // };
+    // let mut vpi = VerifierProcessedInputs {
+    //     c0x: BigInt::parse_bytes(b"7005013949998269612234996630658580519456097203281734268590713858661772481668", 10).unwrap(),
+    //     c0y: BigInt::parse_bytes(b"869093939501355406318588453775243436758538662501260653214950591532352435323", 10).unwrap(),
+    //     x2x1: BigInt::parse_bytes(b"21831381940315734285607113342023901060522397560371972897001948545212302161822", 10).unwrap(),
+    //     x2x2: BigInt::parse_bytes(b"17231025384763736816414546592865244497437017442647097510447326538965263639101", 10).unwrap(),
+    //     x2y1: BigInt::parse_bytes(b"2388026358213174446665280700919698872609886601280537296205114254867301080648", 10).unwrap(),
+    //     x2y2: BigInt::parse_bytes(b"11507326595632554467052522095592665270651932854513688777769618397986436103170", 10).unwrap(),
 
-    };
+    // };
 
-    let pubSignalBigInt = BigInt::parse_bytes(b"14516932981781041565586298118536599721399535462624815668597272732223874827152", 10).unwrap();
+    // let pubSignalBigInt = BigInt::parse_bytes(b"14516932981781041565586298118536599721399535462624815668597272732223874827152", 10).unwrap();
 
     
-    let mut zh: &mut Fp256<FrParameters> = &mut Fr::zero();
+    // let mut zh: &mut Fp256<FrParameters> = &mut Fr::zero();
 
-    let mut zhInv: &mut Fp256<FrParameters> = &mut Fr::zero();
+    // let mut zhInv: &mut Fp256<FrParameters> = &mut Fr::zero();
 
-    compute_challenges(&mut challenges, &mut roots, &mut zh, &mut zhinv, vpi, pubSignalBigInt);
+    // compute_challenges(&mut challenges, &mut roots, &mut zh, &mut zhinv, vpi, pubSignalBigInt);
 
-    // println!("challenges alpha: {}", challenges.alpha.to_string());
-    // println!("challenges beta: {}", challenges.beta.to_string());
-    // println!("challenges gamma: {}", challenges.gamma.to_string());
-    // println!("roots: {:?}", roots.h0w8);
-    // println!("zh: {}", zh.to_string());
-    // println!("zhinv: {}", zhinv.to_string());
+    // let mut alpha = challenges.alpha;
+    // let mut beta = challenges.beta;
+    // let mut gamma = challenges.gamma;
+    // let mut y = challenges.y;
+    // let mut xi = challenges.xi;
+    // let mut xiseed = challenges.xiSeed;
+    // let mut xiseed2 = challenges.xiSeed2;
+    
+
+
+    
 
 
     // let R2 = calculateR2(xi);
@@ -1207,10 +1156,7 @@ fn calculateR2(
         ..
     } = proof;
 
-    let w1 = Fr::from_str(
-        "5709868443893258075976348696661355716898495876243883251619397131511003808859",
-    )
-    .unwrap();
+    let w1 = get_omegas().w1;
     let mut num = Fr::from_str("1").unwrap();
 
     let betaxi = Fr::from_str(
