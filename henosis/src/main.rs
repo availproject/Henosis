@@ -51,15 +51,15 @@ fn main() {
 
     println!("Henosis Proof Aggregator Listening for Proofs!!");
 
-    // while let Some(mut txn_hash) = rt.block_on(async {
-    //     let hash = logs.next().await.unwrap().transaction_hash;
-    //     hash
-    // }) {
+    while let Some(mut txn_hash) = rt.block_on(async {
+        let hash = logs.next().await.unwrap().transaction_hash;
+        hash
+    }) {
         // println!("Transaction Hash: {:?}", txn_hash);
-        let sample_hash =
-            H256::from_str("0xed0c28abb022be570305ae3cd454c5c3bb027ede55cfdefe6744bc1b5af90d8a")
-                .unwrap();
-        let txn_hash = sample_hash;
+        // let sample_hash =
+        //     H256::from_str("0xed0c28abb022be570305ae3cd454c5c3bb027ede55cfdefe6744bc1b5af90d8a")
+        //         .unwrap();
+        // let txn_hash = sample_hash;
         // let get_txn_handle = tokio::spawn(http_provider.clone().get_transaction(sample_hash));
 
         // let tx: Transaction = get_txn_handle.await.unwrap().unwrap().unwrap();
@@ -72,38 +72,37 @@ fn main() {
             tx
         });
 
-        // console.log(tx);
         if tx.to.unwrap() == POLYGON_ZKEVM_PROXY {
-            // let _fetch_handle = tokio::spawn(fetch_proof_and_pub_signal(sample_hash));
-
-            // let _proof = _fetch_handle.await.unwrap();
 
             let _proof = rt.block_on(async {
                 let proof = fetch_proof_and_pub_signal(txn_hash).await;
                 proof
             });
 
-            // let _proof = fetch_proof_and_pub_signal(sample_hash).await;
             println!("Proof: {:?}", _proof);
+            
             let _ = proof_queues.add(ProofValue {
                 proof: _proof.0,
                 pub_signal: _proof.1,
             });
             println!("Transaction: {:?}", tx);
 
-            if proof_queues.size() == 1 {
-                // perform aggregation
+            // Performing Aggregation
+            if proof_queues.size() == 2 {
                 println!("Inside queue !!");
-                let proof = proof_queues.peek().unwrap();
-                println!("Proof sinside quque !!: {:?}", proof);
+                let proof1 = proof_queues.peek().unwrap();
+                let _ = proof_queues.remove();
+                let proof2 = proof_queues.peek().unwrap();
+                let _ = proof_queues.remove();
+
+                println!("Proofs for Aggregation");
 
                 let receipt = rt.block_on(async {
                     let receipt = task::spawn_blocking(|| {
                         let receipt = converter_fflonk_to_groth16(
-                            [proof.clone().proof, proof.clone().proof],
-                            [proof.clone().pub_signal, proof.pub_signal],
+                            [proof1.proof, proof2.proof],
+                            [proof1.pub_signal, proof2.pub_signal],
                         );
-                        // println!("Receipt: {:?}", receipt);
                         receipt
                     })
                     .await
@@ -113,7 +112,7 @@ fn main() {
                 });
 
                 println!("Receipt: {:?}", receipt);
-                // let receipt =
+
                 let a = receipt.snark.a;
                 let b = receipt.snark.b;
                 let c = receipt.snark.c;
@@ -160,13 +159,8 @@ fn main() {
                     public_3_bigint_string,
                 );
 
-                // println!("a 0 {:?}", a_0_bigint);
-                println!("Aggregated proof");
-
-                println!("Proofs: {:?}", proof_queues);
-                let _ = proof_queues.remove();
-                // let _ = proof_queues.remove();
+                println!("Aggregated 2 proof");
             }
         }
-    // }
+    }
 }
