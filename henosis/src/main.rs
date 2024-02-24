@@ -51,15 +51,15 @@ fn main() {
 
     println!("Henosis Proof Aggregator Listening for Proofs!!");
 
-    while let Some(txn_hash) = rt.block_on(async {
+    while let Some(mut txn_hash) = rt.block_on(async {
         let hash = logs.next().await.unwrap().transaction_hash;
         hash
     }) {
-        println!("Transaction Hash: {:?}", txn_hash);
-        let sample_hash =
-            H256::from_str("0xed0c28abb022be570305ae3cd454c5c3bb027ede55cfdefe6744bc1b5af90d8a")
-                .unwrap();
-
+        // println!("Transaction Hash: {:?}", txn_hash);
+        // let sample_hash =
+        //     H256::from_str("0xed0c28abb022be570305ae3cd454c5c3bb027ede55cfdefe6744bc1b5af90d8a")
+        //         .unwrap();
+        // let txn_hash = sample_hash;
         // let get_txn_handle = tokio::spawn(http_provider.clone().get_transaction(sample_hash));
 
         // let tx: Transaction = get_txn_handle.await.unwrap().unwrap().unwrap();
@@ -91,7 +91,7 @@ fn main() {
             });
             println!("Transaction: {:?}", tx);
 
-            if proof_queues.size() == 2 {
+            if proof_queues.size() == 1 {
                 // perform aggregation
                 println!("Inside queue !!");
                 let proof = proof_queues.peek().unwrap();
@@ -161,26 +161,12 @@ fn main() {
                 );
 
                 // println!("a 0 {:?}", a_0_bigint);
-                println!("Aggregated 2 proofs");
+                println!("Aggregated proof");
 
                 println!("Proofs: {:?}", proof_queues);
                 let _ = proof_queues.remove();
-                let _ = proof_queues.remove();
+                // let _ = proof_queues.remove();
             }
         }
     }
-
-    // let sleep_duration = time::Duration::from_secs(1);
-
-    // thread::spawn(move || loop {
-    //     println!("Hello from a thread!");
-    //     // repeated_function(); // Call the function you want to repeat
-    //     thread::sleep(sleep_duration); // Wait for 10 seconds
-    // });
-
-    // loop {
-    //     thread::sleep(time::Duration::from_secs(60)); // Example: main thread does something else or just waits
-    // }
-
-    // Ok(())
 }
