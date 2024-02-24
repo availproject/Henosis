@@ -51,15 +51,15 @@ fn main() {
 
     println!("Henosis Proof Aggregator Listening for Proofs!!");
 
-    while let Some(mut txn_hash) = rt.block_on(async {
-        let hash = logs.next().await.unwrap().transaction_hash;
-        hash
-    }) {
+    // while let Some(mut txn_hash) = rt.block_on(async {
+    //     let hash = logs.next().await.unwrap().transaction_hash;
+    //     hash
+    // }) {
         // println!("Transaction Hash: {:?}", txn_hash);
-        // let sample_hash =
-        //     H256::from_str("0xed0c28abb022be570305ae3cd454c5c3bb027ede55cfdefe6744bc1b5af90d8a")
-        //         .unwrap();
-        // let txn_hash = sample_hash;
+        let sample_hash =
+            H256::from_str("0xed0c28abb022be570305ae3cd454c5c3bb027ede55cfdefe6744bc1b5af90d8a")
+                .unwrap();
+        let txn_hash = sample_hash;
         // let get_txn_handle = tokio::spawn(http_provider.clone().get_transaction(sample_hash));
 
         // let tx: Transaction = get_txn_handle.await.unwrap().unwrap().unwrap();
@@ -168,5 +168,5 @@ fn main() {
                 // let _ = proof_queues.remove();
             }
         }
-    }
+    // }
 }
