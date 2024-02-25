@@ -248,7 +248,7 @@ pub fn permutationQuotientContribution(pvs: &mut PartialVerifierState, l0AtZ: Fp
 }
 
 
-pub fn lookupQuotientContribution(pvs: &mut PartialVerifierState){
+pub fn lookupQuotientContribution(pvs: &mut PartialVerifierState) -> Fp256<FrParameters>{
 
     let betaplusone = pvs.beta_lookup.add(Fr::from_str("1").unwrap());
     let betaGamma = betaplusone.mul(pvs.gamma_lookup);
@@ -259,7 +259,21 @@ pub fn lookupQuotientContribution(pvs: &mut PartialVerifierState){
     res = res.mul(pvs.power_of_alpha_6);
 
     // println!("res: {}", get_bigint_from_fr(res));
-    let mut lastOmega = getOmega().sub(Fr::from(getDomainSize()).sub(Fr::from_str("1").unwrap()));
+    let mut lastOmega = getOmega().pow([getDomainSize()-1]);
+    println!("lastOmega: {}", get_bigint_from_fr(lastOmega));
+    let zMinusLastOmega = pvs.z.add(lastOmega.neg());
+    res = res.mul(zMinusLastOmega);
+    
+
+    let intermediateValue = pvs.l_0_at_z.mul(pvs.power_of_alpha_7);
+    res = res.add(intermediateValue.neg());
+
+    let betaGammaPowered = betaGamma.pow([getDomainSize()-1]);
+    let subtrahend = pvs.power_of_alpha_8.mul(pvs.l_n_minus_one_at_z.mul(betaGammaPowered));
+    res = res.add(subtrahend.neg());
+    println!("res: {}", get_bigint_from_fr(res));
+    res
+
 
 
 }
@@ -272,6 +286,11 @@ pub fn verifyQuotientEvaluation(alpha: Fp256<FrParameters>, z: Fp256<FrParameter
     let alpha_6 = alpha_5.mul(alpha);
     let alpha_7 = alpha_6.mul(alpha);
     let alpha_8 = alpha_7.mul(alpha);
+
+    let l0atz= evaluateLagrangePolyOutOfDomain(0, z);
+
+    let lnmius1atZ = evaluateLagrangePolyOutOfDomain(getDomainSize()-1, z);
+
 
     let mut pvs = PartialVerifierState{
         alpha,
@@ -289,20 +308,18 @@ pub fn verifyQuotientEvaluation(alpha: Fp256<FrParameters>, z: Fp256<FrParameter
         gamma_lookup: Fr::from_str("10143450367578341384865650570084054672128122620763568488049428709968718700978").unwrap(),
         beta_plus_one: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
         beta_gamma_plus_gamma: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
-        v: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(), 
-        u: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
-        z: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
+        v: Fr::from_str("13330004428861975879381254388579709216101551406414154978351365682885384794150").unwrap(), 
+        u: Fr::from_str("1288818797502384203299534503559211197379962355037926217584736460242183741135").unwrap(),
+        z: Fr::from_str("2401351998492944598364033620572509016859399460686508186648075303585158829617").unwrap(),
         z_minus_last_omega: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
-        l_0_at_z: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
-        l_n_minus_one_at_z: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
-        z_in_domain_size: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
+        l_0_at_z: l0atz,
+        l_n_minus_one_at_z: lnmius1atZ,
+        z_in_domain_size: Fr::from_str("2401351998492944598364033620572509016859399460686508186648075303585158829617").unwrap(),
 
     };
 
 
-    let l0atz= evaluateLagrangePolyOutOfDomain(0, z);
 
-    let lnmius1atZ = evaluateLagrangePolyOutOfDomain(getDomainSize()-1, z);
 
     let stateT = l0atz.mul(getPublicInputs());
 
