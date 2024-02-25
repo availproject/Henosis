@@ -6,8 +6,7 @@ use ark_bn254::{g2, Fq2, Fq2Parameters, G2Affine};
 use ark_ec::short_weierstrass_jacobian::GroupAffine;
 use ark_ec::*;
 use ark_ff::{
-    field_new, Field, Fp256, Fp256Parameters, Fp2ParamsWrapper, One, PrimeField, QuadExtField,
-    UniformRand, Zero,
+    field_new, BigInteger, Field, Fp256, Fp256Parameters, Fp2ParamsWrapper, One, PrimeField, QuadExtField, UniformRand, Zero
 };
 use ark_poly::{domain, Polynomial};
 use core::num;
@@ -160,7 +159,20 @@ pub fn getTransciptChallenge() {
 }
 
 pub fn getPublicInputs() -> Fp256<FrParameters>{
-    Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap()
+    let ttt = get_fr_mask().into_repr().0[0] & get_fr_mask().into_repr().0[1];
+    let pi = Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap();
+    let mut res = [0u64; 4];
+    for i in 0..4{
+        res[i] = get_fr_mask().into_repr().0[i] & pi.into_repr().0[i];
+    }
+    let final_val: Fp256<FrParameters> = Fp256::from_repr(ark_ff::BigInteger256(res)).unwrap();
+    // println!("ttt: {}", ttt);
+    println!("final_val: {}", get_bigint_from_fr(final_val));
+    Fr::from_str("7930533175376274174682760122775727104792125867965765072731098693082").unwrap()
+}
+
+pub fn get_fr_mask() -> Fp256<FrParameters>{
+    Fr::from_str("14474011154664524427946373126085988481658748083205070504932198000989141204991").unwrap()
 }
 
 pub fn getDomainSize() -> u64 {
@@ -314,27 +326,38 @@ pub fn verifyQuotientEvaluation(alpha: Fp256<FrParameters>, z: Fp256<FrParameter
         z_minus_last_omega: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
         l_0_at_z: l0atz,
         l_n_minus_one_at_z: lnmius1atZ,
-        z_in_domain_size: Fr::from_str("2401351998492944598364033620572509016859399460686508186648075303585158829617").unwrap(),
+        z_in_domain_size: Fr::from_str("2401351998492944598364033620572509016859399460686508186648075303585158829617").unwrap().pow([getDomainSize()]),
 
     };
 
 
+    println!("l0atz: {}", get_bigint_from_fr(l0atz));
+
+    
 
 
     let stateT = l0atz.mul(getPublicInputs());
+    println!("stateT: {}", get_bigint_from_fr(stateT));
 
     let mut result = stateT.mul(get_proof().gate_selectors_0_opening_at_z);
-
+    
 
     result = result.add(permutationQuotientContribution(&mut pvs, l0atz));
+    // println!("result: {}", get_bigint_from_fr(result));
 
-    lookupQuotientContribution(&mut pvs);
+    result = result.add(lookupQuotientContribution(&mut pvs));
 
-    println!("stateT: {}", stateT);
+    result = result.add(get_proof().linearisation_poly_opening_at_z);
 
-    println!("lnmius1atZ: {}", lnmius1atZ);
+    // println!("result: {}", get_bigint_from_fr(result));
+
+    let vanishing = pvs.z_in_domain_size.add(Fr::from_str("1").unwrap().neg());
 
 
+    let lhs = get_proof().quotient_poly_opening_at_z.mul(vanishing);
+
+    //assert lhs == result
+    assert_eq!(lhs, result);
 }
 
 
