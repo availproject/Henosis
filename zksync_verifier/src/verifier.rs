@@ -6,6 +6,7 @@ use ark_bn254::{
     g1, g1::Parameters, Bn254, Fq, FqParameters, Fr, FrParameters, G1Projective, G2Projective,
 };
 use ark_bn254::{g2, Fq2, Fq2Parameters, G2Affine};
+use ark_ec::group::Group;
 use ark_ec::short_weierstrass_jacobian::GroupAffine;
 use ark_ec::*;
 use ark_ff::{
@@ -152,6 +153,23 @@ pub fn verify() {
     )
     .into_affine();
 
+    let vk_gate_selectors_0_x = <G1Point as AffineCurve>::BaseField::from_str(
+        "14205344997483453838751247319875941252565270087237127926142565059361638985005",
+    )
+    .unwrap();
+
+    let vk_gate_selectors_0_y = <G1Point as AffineCurve>::BaseField::from_str(
+        "18149743938984840795673757375540800526102537869676573169262794906671381288353",
+    )
+    .unwrap();
+
+    let vk_gate_selectors_0_affine = G1Projective::new(
+        vk_gate_selectors_0_x,
+        vk_gate_selectors_0_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+
     let vk_gate_selectors_1_x = <G1Point as AffineCurve>::BaseField::from_str(
         "1503845488092386103648065432248698383432228205851738279222364151597624172002",
     )
@@ -239,62 +257,107 @@ pub fn verify() {
 
     let vk_lookp_table_0_x = <G1Point as AffineCurve>::BaseField::from_str(
         "20045313662746578028950791395157660351198208045597010788369662325700141348443",
-    ).unwrap();
+    )
+    .unwrap();
 
     let vk_lookp_table_0_y = <G1Point as AffineCurve>::BaseField::from_str(
         "2200761695078532224145807378118591946349840073460005094399078719163643466856",
-    ).unwrap();
+    )
+    .unwrap();
 
     let vk_lookp_table_0_affine = G1Projective::new(
         vk_lookp_table_0_x,
         vk_lookp_table_0_y,
         <G1Projective as ProjectiveCurve>::BaseField::one(),
-    ).into_affine();
+    )
+    .into_affine();
 
     let vk_lookp_table_1_x = <G1Point as AffineCurve>::BaseField::from_str(
         "13866646217607640441607041956684111087071997201218815349460750486791109380780",
-    ).unwrap();
+    )
+    .unwrap();
 
     let vk_lookp_table_1_y = <G1Point as AffineCurve>::BaseField::from_str(
         "13178446611795019678701878053235714968797421377761816259103804833273256298333",
-    ).unwrap();
+    )
+    .unwrap();
 
     let vk_lookp_table_1_affine = G1Projective::new(
         vk_lookp_table_1_x,
         vk_lookp_table_1_y,
         <G1Projective as ProjectiveCurve>::BaseField::one(),
-    ).into_affine();
+    )
+    .into_affine();
 
     let vk_lookp_table_2_x = <G1Point as AffineCurve>::BaseField::from_str(
         "5057503605752869531452842486824745179648819794307492731589448195268672785801",
-    ).unwrap();
+    )
+    .unwrap();
 
     let vk_lookp_table_2_y = <G1Point as AffineCurve>::BaseField::from_str(
         "8597434312520299647191152876265164941580478223412397470356037586993894367875",
-    ).unwrap();
+    )
+    .unwrap();
 
     let vk_lookp_table_2_affine = G1Projective::new(
         vk_lookp_table_2_x,
         vk_lookp_table_2_y,
         <G1Projective as ProjectiveCurve>::BaseField::one(),
-    ).into_affine();
+    )
+    .into_affine();
 
     let vk_lookp_table_3_x = <G1Point as AffineCurve>::BaseField::from_str(
         "1342318055425277544055386589364579054544440640110901993487861472578322387903",
-    ).unwrap();
+    )
+    .unwrap();
 
     let vk_lookp_table_3_y = <G1Point as AffineCurve>::BaseField::from_str(
         "4438354282468267034382897187461199764068502038746983055473062465446039509158",
-    ).unwrap();
+    )
+    .unwrap();
 
     let vk_lookp_table_3_affine = G1Projective::new(
         vk_lookp_table_3_x,
         vk_lookp_table_3_y,
         <G1Projective as ProjectiveCurve>::BaseField::one(),
-    ).into_affine();
+    )
+    .into_affine();
 
+    let vk_lookup_selector_x = <G1Point as AffineCurve>::BaseField::from_str(
+        "21395113354694454854762351476959063468617925208554049154496069024740903092231",
+    )
+    .unwrap();
 
-    prepare_queries(
+    let vk_lookup_selector_y = <G1Point as AffineCurve>::BaseField::from_str(
+        "15891706754776486805263804095178072926455306765747241658585867789806580351077",
+    )
+    .unwrap();
+
+    let vk_lookup_selector_affine = G1Projective::new(
+        vk_lookup_selector_x,
+        vk_lookup_selector_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+
+    let vk_lookup_table_type_x = <G1Point as AffineCurve>::BaseField::from_str(
+        "21395113354694454854762351476959063468617925208554049154496069024740903092231",
+    )
+    .unwrap();
+
+    let vk_lookup_table_type_y = <G1Point as AffineCurve>::BaseField::from_str(
+        "15891706754776486805263804095178072926455306765747241658585867789806580351077",
+    )
+    .unwrap();
+
+    let vk_lookup_table_type_affine = G1Projective::new(
+        vk_lookup_table_type_x,
+        vk_lookup_table_type_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+
+    let queries = prepare_queries(
         vk_gate_setup_0_affine,
         vk_gate_setup_1_affine,
         vk_gate_setup_2_affine,
@@ -310,6 +373,22 @@ pub fn verify() {
         vk_lookp_table_2_affine,
         vk_lookp_table_3_affine,
     );
+
+    let lookup_s_first_aggregated_commitment_coeff = queries.3;
+
+    prepare_aggregated_commitment(
+        queries,
+        vk_gate_selectors_0_affine,
+        vk_gate_selectors_1_affine,
+        vk_permutation_0_affine,
+        vk_permutation_1_affine,
+        vk_permutation_2_affine,
+        vk_lookup_selector_affine,
+        vk_lookup_table_type_affine,
+        queries.2,
+        lookup_s_first_aggregated_commitment_coeff,
+        queries.4,
+    );
 }
 
 // params
@@ -324,7 +403,7 @@ fn add_assign_lookup_linearisation_contribution_with_v(
     state_opening_0_z: Fr,
     state_opening_1_z: Fr,
     state_opening_2_z: Fr,
-) {
+) -> Fr {
     // this is part of proof
     let proof_copy_permutation_grand_product_opening_at_z_omega = Fr::from_str(
         "7538059542152278064360430275006244865024464052241262187047297399810715308295",
@@ -333,23 +412,28 @@ fn add_assign_lookup_linearisation_contribution_with_v(
 
     let state_power_of_alpha_6 = Fr::from_str(
         "8319164303429084971911245066442068933512569563880543098813813308827829606918",
-    ).unwrap();
+    )
+    .unwrap();
 
     let state_power_of_alpha_7 = Fr::from_str(
         "5129674270777039881019141106592790354882335596282377700229200108640921885885",
-    ).unwrap();
+    )
+    .unwrap();
 
     let state_power_of_alpha_8 = Fr::from_str(
         "7368618184218696583873857280284780670315006906762991940416936213864621895772",
-    ).unwrap();
+    )
+    .unwrap();
 
     let state_l_n_minus_1_at_z = Fr::from_str(
         "5758032436361615273499003282171634310788590443862971126347537499319196954720",
-    ).unwrap();
+    )
+    .unwrap();
 
     let state_z_minus_last_omega = Fr::from_str(
         "6960146633092105328029573621741727691156028174137047893187470702741186149724",
-    ).unwrap();
+    )
+    .unwrap();
 
     let state_v_slot = Fr::from_str(
         "13330004428861975879381254388579709216101551406414154978351365682885384794150",
@@ -358,44 +442,61 @@ fn add_assign_lookup_linearisation_contribution_with_v(
 
     let proof_lookup_t_poly_opening_at_z_omega = Fr::from_str(
         "1526611985826438991010848350624117895374304477623813636492366499941649169423",
-    ).unwrap();
+    )
+    .unwrap();
 
-    let proof_lookup_t_poly_opening_at_z = Fr::from_str(
-        "790573260182333997045997353662764971783884673183303056517854663274184491762",
-    ).unwrap();
+    let proof_lookup_t_poly_opening_at_z =
+        Fr::from_str("790573260182333997045997353662764971783884673183303056517854663274184491762")
+            .unwrap();
 
     let state_beta_lookup = Fr::from_str(
         "11528514326249514252855703437809342841453735434183305817156029513988866631298",
-    ).unwrap();
+    )
+    .unwrap();
 
     let state_beta_gamma_plus_gamma = Fr::from_str(
         "11983334460880557356576830398288108328144139034428008470735158345550044764455",
-    ).unwrap();
+    )
+    .unwrap();
 
     let state_eta = Fr::from_str(
         "13927658615988103753598521980340228631453479498558491767944846275014039690937",
-    ).unwrap();
+    )
+    .unwrap();
 
     let proof_looup_table_type_poly_opening_at_z = Fr::from_str(
         "7320378240983578507320264228195167543809287353218722858998931336614363841795",
-    ).unwrap();
+    )
+    .unwrap();
 
     let proof_lookup_selector_poly_opening_at_z = Fr::from_str(
         "2209111850691644114898474232757656611086726698453992180215187737049963638713",
-    ).unwrap();
+    )
+    .unwrap();
 
     let state_gamma_lookup = Fr::from_str(
         "10143450367578341384865650570084054672128122620763568488049428709968718700978",
-    ).unwrap();
+    )
+    .unwrap();
 
     let state_beta_plus_one = Fr::from_str(
         "11528514326249514252855703437809342841453735434183305817156029513988866631299",
-    ).unwrap();
+    )
+    .unwrap();
 
-    let mut factor = proof_copy_permutation_grand_product_opening_at_z_omega;
+    let proof_lookup_grand_product_opening_at_z_omega = Fr::from_str(
+        "15834657814168463130145202123584569486416145351650914790360391211128804599867",
+    )
+    .unwrap();
+
+    // check is this assignment even correct ??
+    let mut factor = proof_lookup_grand_product_opening_at_z_omega;
     factor = factor.mul(state_power_of_alpha_6);
     factor = factor.mul(state_z_minus_last_omega);
     factor = factor.mul(state_v_slot);
+
+    // saving factor into
+    let lookup_s_first_aggregated_commitment_coeff = factor;
 
     factor = proof_lookup_t_poly_opening_at_z_omega;
     factor = factor.mul(state_beta_lookup);
@@ -407,7 +508,7 @@ fn add_assign_lookup_linearisation_contribution_with_v(
     let mut freconstructed = state_opening_0_z;
     let eta = state_eta;
     let mut currenteta = eta;
-    
+
     freconstructed = currenteta.mul(state_opening_1_z).add(freconstructed);
     currenteta = currenteta.mul(eta);
     freconstructed = currenteta.mul(state_opening_2_z).add(freconstructed);
@@ -423,7 +524,7 @@ fn add_assign_lookup_linearisation_contribution_with_v(
     factor = factor.mul(state_power_of_alpha_6);
     factor = factor.mul(state_z_minus_last_omega);
 
-      // calcualated somewhere in the middle
+    // calcualated somewhere in the middle
     let state_l_0_at_z = Fr::from_str(
         "16998705531439461081194953598960002453935573094468931463486819379249964474322",
     )
@@ -436,8 +537,9 @@ fn add_assign_lookup_linearisation_contribution_with_v(
 
     println!("Factor: {:?}", factor.to_string());
 
-    // factor // need to store it in somewhere
+    lookup_s_first_aggregated_commitment_coeff
 
+    // factor // need to store it in somewhere
 }
 
 fn add_assign_permutation_linearisation_contribution_with_v(
@@ -447,7 +549,7 @@ fn add_assign_permutation_linearisation_contribution_with_v(
     state_opening_2_z: Fr,
     state_opening_3_z: Fr,
     vk_permutation_3_affine: GroupAffine<Parameters>,
-) -> GroupAffine<Parameters> {
+) -> (GroupAffine<Parameters>, Fr) {
     let state_power_of_alpha_4 =
         Fr::from_str("734209011026075698694513990691048474879478463182218074328095486857043273273")
             .unwrap();
@@ -537,7 +639,7 @@ fn add_assign_permutation_linearisation_contribution_with_v(
     factor = factor.add(state_l_0_at_z.mul(state_power_of_alpha_5));
     factor = factor.mul(state_v_slot);
     // skipping storing factor for now or else we need to store it into this
-    // COPY_PERMUTATION_FIRST_AGGREGATED_COMMITMENT_COEFF
+    let copy_permutation_first_aggregated_commitment_coeff = factor;
 
     factor = state_power_of_alpha_4.mul(state_beta);
 
@@ -566,7 +668,10 @@ fn add_assign_permutation_linearisation_contribution_with_v(
     println!("Temp Query Val: {:?}", temp_query_val.x.to_string());
     println!("Temp Query Val: {:?}", temp_query_val.y.to_string());
 
-    queries_at_z_1.add(-temp_query_val)
+    (
+        queries_at_z_1.add(-temp_query_val),
+        copy_permutation_first_aggregated_commitment_coeff,
+    )
 }
 
 fn add_assign_rescue_customgate_linearisation_contribution_with_v(
@@ -703,6 +808,12 @@ fn prepare_queries(
     vk_lookp_table_1_affine: GroupAffine<Parameters>,
     vk_lookp_table_2_affine: GroupAffine<Parameters>,
     vk_lookp_table_3_affine: GroupAffine<Parameters>,
+) -> (
+    GroupAffine<Parameters>,
+    GroupAffine<Parameters>,
+    Fr,
+    Fr,
+    GroupAffine<Parameters>,
 ) {
     let z_domain_size = Fr::from_str(
         "8306037114154435423292901166608307526952350843292506299851821833617177949622",
@@ -844,8 +955,9 @@ fn prepare_queries(
     println!(" Queries at Z 1 x Slot: {:?}", queries_at_z_1.x.to_string());
     println!(" Queries at Z 1 y Slot: {:?}", queries_at_z_1.y.to_string());
     // PROOF_QUOTIENT_POLY_PARTS_1_X_SLOT currentz QUERIES_AT_Z_0_X_SLOT
+    // queries_at_z_1
 
-    queries_at_z_1 = add_assign_permutation_linearisation_contribution_with_v(
+    let resp = add_assign_permutation_linearisation_contribution_with_v(
         queries_at_z_1,
         state_opening_0_z,
         state_opening_1_z,
@@ -854,42 +966,598 @@ fn prepare_queries(
         vk_permutation_3_affine,
     );
 
+    queries_at_z_1 = resp.0;
+    let copy_permutation_first_aggregated_commitment_coeff = resp.1;
+
     println!("Queries at Z 1 x Slot: {:?}", queries_at_z_1.x.to_string());
     println!("Queries at Z 1 y Slot: {:?}", queries_at_z_1.y.to_string());
 
-    // we are assigning few things here internally which would be required later on 
-    add_assign_lookup_linearisation_contribution_with_v(
-        queries_at_z_1,
-        state_opening_0_z,
-        state_opening_1_z,
-        state_opening_2_z,
-    );
+    // we are assigning few things here internally which would be required later on
+    let lookup_s_first_aggregated_commitment_coeff =
+        add_assign_lookup_linearisation_contribution_with_v(
+            queries_at_z_1,
+            state_opening_0_z,
+            state_opening_1_z,
+            state_opening_2_z,
+        );
 
     let state_eta = Fr::from_str(
         "13927658615988103753598521980340228631453479498558491767944846275014039690937",
-    ).unwrap();
+    )
+    .unwrap();
 
     let eta = state_eta;
     let mut currenteta = eta;
 
     let mut queries_t_poly_aggregated = vk_lookp_table_0_affine;
-    queries_t_poly_aggregated = vk_lookp_table_1_affine.mul(currenteta).into_affine().add(queries_t_poly_aggregated);
+    queries_t_poly_aggregated = vk_lookp_table_1_affine
+        .mul(currenteta)
+        .into_affine()
+        .add(queries_t_poly_aggregated);
 
     currenteta = currenteta.mul(eta);
-    queries_t_poly_aggregated = vk_lookp_table_2_affine.mul(currenteta).into_affine().add(queries_t_poly_aggregated);
+    queries_t_poly_aggregated = vk_lookp_table_2_affine
+        .mul(currenteta)
+        .into_affine()
+        .add(queries_t_poly_aggregated);
     currenteta = currenteta.mul(eta);
 
-    queries_t_poly_aggregated = vk_lookp_table_3_affine.mul(currenteta).into_affine().add(queries_t_poly_aggregated);
+    queries_t_poly_aggregated = vk_lookp_table_3_affine
+        .mul(currenteta)
+        .into_affine()
+        .add(queries_t_poly_aggregated);
 
-    println!("Queries T Poly Aggregated x Slot: {:?}", queries_t_poly_aggregated.x.to_string());
-    println!("Queries T Poly Aggregated y Slot: {:?}", queries_t_poly_aggregated.y.to_string());
+    println!(
+        "Queries T Poly Aggregated x Slot: {:?}",
+        queries_t_poly_aggregated.x.to_string()
+    );
+    println!(
+        "Queries T Poly Aggregated y Slot: {:?}",
+        queries_t_poly_aggregated.y.to_string()
+    );
 
+    (
+        queries_at_z_0,
+        queries_at_z_1,
+        copy_permutation_first_aggregated_commitment_coeff,
+        lookup_s_first_aggregated_commitment_coeff,
+        queries_t_poly_aggregated,
+    )
 }
 
+fn prepare_aggregated_commitment(
+    queries: (
+        GroupAffine<Parameters>,
+        GroupAffine<Parameters>,
+        Fr,
+        Fr,
+        GroupAffine<Parameters>,
+    ),
+    vk_gate_selectors_0_affine: GroupAffine<Parameters>,
+    vk_gate_selectors_1_affine: GroupAffine<Parameters>,
+    vk_permutation_0_affine: GroupAffine<Parameters>,
+    vk_permutation_1_affine: GroupAffine<Parameters>,
+    vk_permutation_2_affine: GroupAffine<Parameters>,
+    vk_lookup_selector_affine: GroupAffine<Parameters>,
+    vk_lookup_table_type_affine: GroupAffine<Parameters>,
+    copy_permutation_first_aggregated_commitment_coeff: Fr,
+    lookup_s_first_aggregated_commitment_coeff: Fr,
+    queries_t_poly_aggregated: GroupAffine<Parameters>,
+) {
+    let queries_z_0 = queries.0;
+    let queries_z_1 = queries.1;
+    let mut aggregation_challenge = Fr::from_str("1").unwrap();
 
+    let first_d_coeff: Fr;
+    let first_t_coeff: Fr;
 
+    let mut aggregated_at_z = queries_z_0;
+    let proof_quotient_poly_opening_at_z_slot = Fr::from_str(
+        "9314291787638126749568703763833741152670265991986629997655170540522333691468",
+    )
+    .unwrap();
 
-fn prepare_aggregated_commitment() {}
+    let state_v_slot = Fr::from_str(
+        "13330004428861975879381254388579709216101551406414154978351365682885384794150",
+    )
+    .unwrap();
+
+    let proof_linearisation_poly_opening_at_z_slot = Fr::from_str(
+        "19343833585712990921041961276646163448505065738578449210211290373092736702345",
+    )
+    .unwrap();
+
+    let proof_state_polys_0_x = <G1Point as AffineCurve>::BaseField::from_str(
+        "1481927715054811733804695304084001679108833716381348939730805268145753672319",
+    )
+    .unwrap();
+
+    let proof_state_polys_0_y = <G1Point as AffineCurve>::BaseField::from_str(
+        "19669144057396287036614970272557992315751929115161637121425116755403567873546",
+    )
+    .unwrap();
+
+    let proof_state_polys_0 = G1Projective::new(
+        proof_state_polys_0_x,
+        proof_state_polys_0_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+
+    let proof_state_polys_1_x = <G1Point as AffineCurve>::BaseField::from_str(
+        "682323284285379543874820022851345346716905264262521335320579112562769002731",
+    )
+    .unwrap();
+
+    let proof_state_polys_1_y = <G1Point as AffineCurve>::BaseField::from_str(
+        "19669144057396287036614970272557992315751929115161637121425116755403567873546",
+    )
+    .unwrap();
+
+    let proof_state_polys_1 = G1Projective::new(
+        proof_state_polys_1_x,
+        proof_state_polys_1_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+
+    let proof_state_polys_2_x = <G1Point as AffineCurve>::BaseField::from_str(
+        "11521515194924070836496020366293362780278763599237451670444937035209680455608",
+    )
+    .unwrap();
+
+    let proof_state_polys_2_y = <G1Point as AffineCurve>::BaseField::from_str(
+        "19669144057396287036614970272557992315751929115161637121425116755403567873546",
+    )
+    .unwrap();
+
+    let proof_state_polys_2 = G1Projective::new(
+        proof_state_polys_2_x,
+        proof_state_polys_2_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+
+    let state_opening_0_z = Fr::from_str(
+        "3025664892310257295690669366416646012226101098007398549232319754774186205803",
+    )
+    .unwrap();
+    let state_opening_1_z = Fr::from_str(
+        "2103479791900830811261997581494396289927820373808412796596131379364316767264",
+    )
+    .unwrap();
+    let state_opening_2_z = Fr::from_str(
+        "9746738055974100534724688319587624714000386943764852782487326466491706467598",
+    )
+    .unwrap();
+    let state_opening_3_z = Fr::from_str(
+        "3117440667388512249305167413828803431193175159348741120837367035359253515212",
+    )
+    .unwrap();
+
+    let proof_gate_selectors_0_opening_at_z = Fr::from_str(
+        "8148483208534253915927418266616456459152123251080630562782462708192922425729",
+    )
+    .unwrap();
+
+    let proof_copy_permutation_polys_0_opening_at_z = Fr::from_str(
+        "5148318317103434325405029846136965801071929637258934964927797937732176388469",
+    )
+    .unwrap();
+
+    let proof_copy_permutation_polys_1_opening_at_z = Fr::from_str(
+        "9350083133715632760163946740136758384048496610034417316968652465998615928235",
+    )
+    .unwrap();
+
+    let proof_copy_permutation_polys_2_opening_at_z = Fr::from_str(
+        "20470364254908040055404858903350518240383939034306565348098332307740905863542",
+    )
+    .unwrap();
+
+    let proof_lookup_t_poly_opening_at_z =
+        Fr::from_str("790573260182333997045997353662764971783884673183303056517854663274184491762")
+            .unwrap();
+
+    let proof_lookup_selector_poly_opening_at_z = Fr::from_str(
+        "2209111850691644114898474232757656611086726698453992180215187737049963638713",
+    )
+    .unwrap();
+
+    let proof_lookup_table_type_poly_opening_at_z = Fr::from_str(
+        "7320378240983578507320264228195167543809287353218722858998931336614363841795",
+    )
+    .unwrap();
+
+    let mut aggregated_opening_at_z = proof_quotient_poly_opening_at_z_slot;
+
+    aggregated_at_z = aggregated_at_z.add(queries_z_1);
+    aggregation_challenge = aggregation_challenge.mul(state_v_slot);
+
+    aggregated_opening_at_z = aggregated_opening_at_z
+        .add(aggregation_challenge.mul(proof_linearisation_poly_opening_at_z_slot));
+
+    fn update_aggregation_challenge(
+        queries_commitment_pt: GroupAffine<Parameters>,
+        value_at_z: Fr,
+        curr_aggregation_challenge: Fr,
+        current_agg_opening_at_z: Fr,
+        state_v_slot: Fr,
+        aggregated_at_z: GroupAffine<Parameters>,
+    ) -> (Fr, GroupAffine<Parameters>, Fr) {
+        let mut new_agg_challenege = curr_aggregation_challenge.mul(state_v_slot);
+        let new_aggregated_at_z = queries_commitment_pt
+            .mul(new_agg_challenege)
+            .into_affine()
+            .add(aggregated_at_z);
+        let new_agg_opening_at_z = new_agg_challenege
+            .mul(value_at_z)
+            .add(current_agg_opening_at_z);
+        (
+            new_agg_challenege,
+            new_aggregated_at_z,
+            new_agg_opening_at_z,
+        )
+    }
+
+    let mut update_agg_challenge = update_aggregation_challenge(
+        proof_state_polys_0,
+        state_opening_0_z,
+        aggregation_challenge,
+        aggregated_opening_at_z,
+        state_v_slot,
+        aggregated_at_z,
+    );
+
+    aggregated_at_z = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_at_z = update_agg_challenge.2;
+
+    update_agg_challenge = update_aggregation_challenge(
+        proof_state_polys_1,
+        state_opening_1_z,
+        aggregation_challenge,
+        aggregated_opening_at_z,
+        state_v_slot,
+        aggregated_at_z,
+    );
+
+    aggregated_at_z = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_at_z = update_agg_challenge.2;
+
+    update_agg_challenge = update_aggregation_challenge(
+        proof_state_polys_2,
+        state_opening_2_z,
+        aggregation_challenge,
+        aggregated_opening_at_z,
+        state_v_slot,
+        aggregated_at_z,
+    );
+
+    aggregated_at_z = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_at_z = update_agg_challenge.2;
+
+    aggregation_challenge = aggregation_challenge.mul(state_v_slot);
+    first_d_coeff = aggregation_challenge;
+
+    aggregated_opening_at_z = aggregation_challenge
+        .mul(state_opening_3_z)
+        .add(aggregated_opening_at_z);
+
+    update_agg_challenge = update_aggregation_challenge(
+        vk_gate_selectors_0_affine,
+        proof_gate_selectors_0_opening_at_z,
+        aggregation_challenge,
+        aggregated_opening_at_z,
+        state_v_slot,
+        aggregated_at_z,
+    );
+
+    aggregated_at_z = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_at_z = update_agg_challenge.2;
+
+    update_agg_challenge = update_aggregation_challenge(
+        vk_permutation_0_affine,
+        proof_copy_permutation_polys_0_opening_at_z,
+        aggregation_challenge,
+        aggregated_opening_at_z,
+        state_v_slot,
+        aggregated_at_z,
+    );
+
+    aggregated_at_z = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_at_z = update_agg_challenge.2;
+
+    update_agg_challenge = update_aggregation_challenge(
+        vk_permutation_1_affine,
+        proof_copy_permutation_polys_1_opening_at_z,
+        aggregation_challenge,
+        aggregated_opening_at_z,
+        state_v_slot,
+        aggregated_at_z,
+    );
+
+    aggregated_at_z = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_at_z = update_agg_challenge.2;
+
+    update_agg_challenge = update_aggregation_challenge(
+        vk_permutation_2_affine,
+        proof_copy_permutation_polys_2_opening_at_z,
+        aggregation_challenge,
+        aggregated_opening_at_z,
+        state_v_slot,
+        aggregated_at_z,
+    );
+
+    aggregated_at_z = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_at_z = update_agg_challenge.2;
+
+    aggregation_challenge = aggregation_challenge.mul(state_v_slot);
+    first_t_coeff = aggregation_challenge;
+
+    aggregated_opening_at_z = aggregation_challenge
+        .mul(proof_lookup_t_poly_opening_at_z)
+        .add(aggregated_opening_at_z);
+
+    update_agg_challenge = update_aggregation_challenge(
+        vk_lookup_selector_affine,
+        proof_lookup_selector_poly_opening_at_z,
+        aggregation_challenge,
+        aggregated_opening_at_z,
+        state_v_slot,
+        aggregated_at_z,
+    );
+
+    aggregated_at_z = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_at_z = update_agg_challenge.2;
+
+    update_agg_challenge = update_aggregation_challenge(
+        vk_lookup_table_type_affine,
+        proof_lookup_table_type_poly_opening_at_z,
+        aggregation_challenge,
+        aggregated_opening_at_z,
+        state_v_slot,
+        aggregated_at_z,
+    );
+
+    aggregated_at_z = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_at_z = update_agg_challenge.2;
+
+    // storing aggregated opening at z
+    // mstore(AGGREGATED_OPENING_AT_Z_SLOT, aggregatedOpeningAtZ)
+
+    aggregation_challenge = aggregation_challenge.mul(state_v_slot);
+
+    let copy_permutation_coeff = aggregation_challenge
+        .mul(state_v_slot)
+        .add(copy_permutation_first_aggregated_commitment_coeff);
+
+    // proof component
+    let proof_copy_permutation_grand_product_x = <G1Point as AffineCurve>::BaseField::from_str(
+        "10682973389427934500889390913980545461720540728378117423453967866054801517546",
+    )
+    .unwrap();
+
+    let proof_copy_permutation_grand_product_y = <G1Point as AffineCurve>::BaseField::from_str(
+        "19640862922252046012593809239563773424382616310643479928760400654556187984808",
+    )
+    .unwrap();
+
+    let proof_copy_permutation_grand_product_affine = G1Projective::new(
+        proof_copy_permutation_grand_product_x,
+        proof_copy_permutation_grand_product_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+
+    let state_u = Fr::from_str(
+        "1288818797502384203299534503559211197379962355037926217584736460242183741135",
+    )
+    .unwrap();
+
+    let proof_copy_permutation_grand_product_opening_at_z_omega = Fr::from_str(
+        "7538059542152278064360430275006244865024464052241262187047297399810715308295",
+    )
+    .unwrap();
+
+    let mut aggregated_z_omega = proof_copy_permutation_grand_product_affine
+        .mul(copy_permutation_coeff)
+        .into_affine();
+    let mut aggregated_opening_z_omega =
+        proof_copy_permutation_grand_product_opening_at_z_omega.mul(aggregation_challenge);
+
+    let proof_state_polys_3_x = <G1Point as AffineCurve>::BaseField::from_str(
+        "7648216166271091756697000850759109818942352153393449549967097850294823322486",
+    )
+    .unwrap();
+
+    let proof_state_polys_3_y = <G1Point as AffineCurve>::BaseField::from_str(
+        "13841059918140042479305358189720506803328611470904137853333589893028890921956",
+    )
+    .unwrap();
+
+    let proof_state_polys_3 = G1Projective::new(
+        proof_state_polys_3_x,
+        proof_state_polys_3_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+
+    let proof_state_polys_3 = G1Projective::new(
+        proof_state_polys_3_x,
+        proof_state_polys_3_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+
+    let proof_state_polys_3_opening_at_z_omega_slot = Fr::from_str(
+        "15977681115418510430689616723041331137718448474191693270665710012377948663376",
+    )
+    .unwrap();
+
+    fn update_aggregation_challenge_second(
+        queries_commitment_pt: GroupAffine<Parameters>,
+        value_at_zomega: Fr,
+        prev_coeff: Fr,
+        curr_aggregation_challenge: Fr,
+        current_aggregated_opening_z_omega: Fr,
+        state_v_slot: Fr,
+        state_u_slot: Fr,
+        aggregated_at_z_omega: GroupAffine<Parameters>,
+    ) -> (Fr, GroupAffine<Parameters>, Fr) {
+        let new_aggregation_challenge = curr_aggregation_challenge.mul(state_v_slot);
+        let final_coeff = new_aggregation_challenge.mul(state_u_slot).add(prev_coeff);
+        let new_aggregated_at_z_omega = queries_commitment_pt
+            .mul(final_coeff)
+            .into_affine()
+            .add(aggregated_at_z_omega);
+        let new_aggregated_opening_at_z_omega = new_aggregation_challenge
+            .mul(value_at_zomega)
+            .add(current_aggregated_opening_z_omega);
+        (
+            new_aggregation_challenge,
+            new_aggregated_at_z_omega,
+            new_aggregated_opening_at_z_omega,
+        )
+    }
+
+    update_agg_challenge = update_aggregation_challenge_second(
+        proof_state_polys_3,
+        proof_state_polys_3_opening_at_z_omega_slot,
+        first_d_coeff,
+        aggregation_challenge,
+        aggregated_opening_z_omega,
+        state_v_slot,
+        state_u,
+        aggregated_z_omega,
+    );
+
+    aggregated_z_omega = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_z_omega = update_agg_challenge.2;
+
+    let proof_lookup_s_poly_x = <G1Point as AffineCurve>::BaseField::from_str(
+        "20887469144570360598226846219688412569127314117060464745189593667525340515656",
+    )
+    .unwrap();
+
+    let proof_lookup_s_poly_y = <G1Point as AffineCurve>::BaseField::from_str(
+        "17016442743265291319847312885025674149359385754888666855828695845548134601930",
+    )
+    .unwrap();
+
+    let proof_lookup_s_poly = G1Projective::new(
+        proof_lookup_s_poly_x,
+        proof_lookup_s_poly_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+
+    let proof_lookup_s_poly_opening_at_z_omega = Fr::from_str(
+        "7036240067875131759268503442624403515627271384033836780470587737696909190933",
+    )
+    .unwrap();
+
+    let proof_lookup_grand_product_x = <G1Point as AffineCurve>::BaseField::from_str(
+        "15834657814168463130145202123584569486416145351650914790360391211128804599867",
+    )
+    .unwrap();
+
+    let proof_lookup_grand_product_y = <G1Point as AffineCurve>::BaseField::from_str(
+        "19669144057396287036614970272557992315751929115161637121425116755403567873546",
+    )
+    .unwrap();
+
+    let proof_lookup_grand_product_affine = G1Projective::new(
+        proof_lookup_grand_product_x,
+        proof_lookup_grand_product_y,
+        <G1Projective as ProjectiveCurve>::BaseField::one(),
+    )
+    .into_affine();
+
+    update_agg_challenge = update_aggregation_challenge_second(
+        proof_lookup_s_poly,
+        proof_lookup_s_poly_opening_at_z_omega,
+        first_t_coeff,
+        aggregation_challenge,
+        aggregated_opening_z_omega,
+        state_v_slot,
+        state_u,
+        aggregated_z_omega,
+    );
+
+    aggregated_z_omega = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_z_omega = update_agg_challenge.2;
+
+    let proof_lookup_grand_product_opening_at_z_omega = Fr::from_str(
+        "15834657814168463130145202123584569486416145351650914790360391211128804599867",
+    )
+    .unwrap();
+
+    let proof_lookup_t_poly_opening_at_z_omega = Fr::from_str(
+        "1526611985826438991010848350624117895374304477623813636492366499941649169423",
+    )
+    .unwrap();
+
+    update_agg_challenge = update_aggregation_challenge_second(
+        proof_lookup_grand_product_affine,
+        proof_lookup_grand_product_opening_at_z_omega,
+        lookup_s_first_aggregated_commitment_coeff,
+        aggregation_challenge,
+        aggregated_opening_z_omega,
+        state_v_slot,
+        state_u,
+        aggregated_z_omega,
+    );
+
+    aggregated_z_omega = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_z_omega = update_agg_challenge.2;
+
+    update_agg_challenge = update_aggregation_challenge_second(
+        queries_t_poly_aggregated,
+        proof_lookup_t_poly_opening_at_z_omega,
+        first_t_coeff,
+        aggregation_challenge,
+        aggregated_opening_z_omega,
+        state_v_slot,
+        state_u,
+        aggregated_z_omega,
+    );
+
+    aggregated_z_omega = update_agg_challenge.1;
+    aggregation_challenge = update_agg_challenge.0;
+    aggregated_opening_z_omega = update_agg_challenge.2;
+
+    // store aggregated_opening_z_omega somewhere and return it as it might be used somewhere else
+
+    let pairing_pair_with_generator = aggregated_at_z.add(aggregated_z_omega);
+
+    let aggregated_value = aggregated_opening_z_omega
+        .mul(state_u)
+        .add(aggregated_opening_at_z);
+
+    // mstore(PAIRING_BUFFER_POINT_X_SLOT, 1)
+    //             mstore(PAIRING_BUFFER_POINT_Y_SLOT, 2)
+    // pointMulIntoDest(PAIRING_BUFFER_POINT_X_SLOT, aggregatedValue, PAIRING_BUFFER_POINT_X_SLOT)
+}
+
+// PROOF_QUOTIENT_POLY_OPENING_AT_Z_SLOT_term
+// PROOF_LINEARISATION_POLY_OPENING_AT_Z_SLOT_term
+// PROOF_STATE_POLYS_0_X_SLOT
+// PROOF_STATE_POLYS_1_X_SLOT
+// PROOF_STATE_POLYS_2_X_SLOT
+
+// }
 
 // PROOF_QUOTIENT_POLY_PARTS_1_X_SLOT_term
 // QUERIES_AT_Z_0_X_SLOT_term
