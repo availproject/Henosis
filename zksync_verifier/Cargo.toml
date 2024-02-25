@@ -1,5 +1,5 @@
 [package]
-name = "fflonk_verifier"
+name = "zksync_verifier"
 version = "0.1.0"
 edition = "2021"
 
