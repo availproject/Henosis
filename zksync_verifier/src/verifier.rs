@@ -341,12 +341,12 @@ pub fn verify() {
     .into_affine();
 
     let vk_lookup_table_type_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "21395113354694454854762351476959063468617925208554049154496069024740903092231",
+        "13676499092754057396636024302761872225487134427308588428518404161282906944615",
     )
     .unwrap();
 
     let vk_lookup_table_type_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "15891706754776486805263804095178072926455306765747241658585867789806580351077",
+        "15549366785750703306676216604027102943243480133735900281635344353668198401192",
     )
     .unwrap();
 
@@ -388,6 +388,7 @@ pub fn verify() {
         queries.2,
         lookup_s_first_aggregated_commitment_coeff,
         queries.4,
+        queries.5,
     );
 }
 
@@ -403,7 +404,7 @@ fn add_assign_lookup_linearisation_contribution_with_v(
     state_opening_0_z: Fr,
     state_opening_1_z: Fr,
     state_opening_2_z: Fr,
-) -> Fr {
+) -> (Fr, Fr) {
     // this is part of proof
     let proof_copy_permutation_grand_product_opening_at_z_omega = Fr::from_str(
         "7538059542152278064360430275006244865024464052241262187047297399810715308295",
@@ -537,7 +538,8 @@ fn add_assign_lookup_linearisation_contribution_with_v(
 
     println!("Factor: {:?}", factor.to_string());
 
-    lookup_s_first_aggregated_commitment_coeff
+    (lookup_s_first_aggregated_commitment_coeff, factor)
+    // LOOKUP_GRAND_PRODUCT_FIRST_AGGREGATED_COMMITMENT_COEFF
 
     // factor // need to store it in somewhere
 }
@@ -814,6 +816,7 @@ fn prepare_queries(
     Fr,
     Fr,
     GroupAffine<Parameters>,
+    Fr
 ) {
     let z_domain_size = Fr::from_str(
         "8306037114154435423292901166608307526952350843292506299851821833617177949622",
@@ -973,7 +976,8 @@ fn prepare_queries(
     println!("Queries at Z 1 y Slot: {:?}", queries_at_z_1.y.to_string());
 
     // we are assigning few things here internally which would be required later on
-    let lookup_s_first_aggregated_commitment_coeff =
+    let (lookup_s_first_aggregated_commitment_coeff ,
+        lookup_grand_product_first_aggregated_commitment_coeff) =
         add_assign_lookup_linearisation_contribution_with_v(
             queries_at_z_1,
             state_opening_0_z,
@@ -1022,6 +1026,7 @@ fn prepare_queries(
         copy_permutation_first_aggregated_commitment_coeff,
         lookup_s_first_aggregated_commitment_coeff,
         queries_t_poly_aggregated,
+        lookup_grand_product_first_aggregated_commitment_coeff
     )
 }
 
@@ -1032,6 +1037,7 @@ fn prepare_aggregated_commitment(
         Fr,
         Fr,
         GroupAffine<Parameters>,
+        Fr
     ),
     vk_gate_selectors_0_affine: GroupAffine<Parameters>,
     vk_gate_selectors_1_affine: GroupAffine<Parameters>,
@@ -1043,9 +1049,15 @@ fn prepare_aggregated_commitment(
     copy_permutation_first_aggregated_commitment_coeff: Fr,
     lookup_s_first_aggregated_commitment_coeff: Fr,
     queries_t_poly_aggregated: GroupAffine<Parameters>,
+    lookup_grand_product_first_aggregated_commitment_coeff: Fr,
 ) {
     let queries_z_0 = queries.0;
     let queries_z_1 = queries.1;
+
+    println!(
+        "Queries Z 0 x Slot: {:?}",
+        queries_z_0.x.to_string()
+    );
     let mut aggregation_challenge = Fr::from_str("1").unwrap();
 
     let first_d_coeff: Fr;
@@ -1084,13 +1096,13 @@ fn prepare_aggregated_commitment(
     )
     .into_affine();
 
-    let proof_state_polys_1_x = <G1Point as AffineCurve>::BaseField::from_str(
+    let proof_state_polys_1_x: Fp256<FqParameters> = <G1Point as AffineCurve>::BaseField::from_str(
         "682323284285379543874820022851345346716905264262521335320579112562769002731",
     )
     .unwrap();
 
     let proof_state_polys_1_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "19669144057396287036614970272557992315751929115161637121425116755403567873546",
+        "5217046082481373877595103417334854412976806729710145608068750987850547916448",
     )
     .unwrap();
 
@@ -1107,7 +1119,7 @@ fn prepare_aggregated_commitment(
     .unwrap();
 
     let proof_state_polys_2_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "19669144057396287036614970272557992315751929115161637121425116755403567873546",
+        "16730301635986498141605740614067891009670237901703266245689883569759929817706",
     )
     .unwrap();
 
@@ -1210,7 +1222,12 @@ fn prepare_aggregated_commitment(
     );
 
     aggregated_at_z = update_agg_challenge.1;
+    
+    println!("Aggregated at z 1 {:?}", aggregated_at_z.x.to_string());
+
+
     aggregation_challenge = update_agg_challenge.0;
+    println!("Aggregation Challenge 1 {:?}", aggregation_challenge.to_string());
     aggregated_opening_at_z = update_agg_challenge.2;
 
     update_agg_challenge = update_aggregation_challenge(
@@ -1225,6 +1242,9 @@ fn prepare_aggregated_commitment(
     aggregated_at_z = update_agg_challenge.1;
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_at_z = update_agg_challenge.2;
+    println!("Aggregated at z 2 {:?}", aggregated_at_z.x.to_string());
+    println!("Aggregation Challenge 2 {:?}", aggregation_challenge.to_string());
+
 
     update_agg_challenge = update_aggregation_challenge(
         proof_state_polys_2,
@@ -1238,6 +1258,9 @@ fn prepare_aggregated_commitment(
     aggregated_at_z = update_agg_challenge.1;
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_at_z = update_agg_challenge.2;
+    println!("Aggregated at z 3 {:?}", aggregated_at_z.x.to_string());
+    println!("Aggregation Challenge 3 {:?}", aggregation_challenge.to_string());
+
 
     aggregation_challenge = aggregation_challenge.mul(state_v_slot);
     first_d_coeff = aggregation_challenge;
@@ -1259,6 +1282,11 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_at_z = update_agg_challenge.2;
 
+    println!("Aggregated at z 4 {:?}", aggregated_at_z.x.to_string());
+    println!("Aggregation Challenge 4 {:?}", aggregation_challenge.to_string());
+
+
+
     update_agg_challenge = update_aggregation_challenge(
         vk_permutation_0_affine,
         proof_copy_permutation_polys_0_opening_at_z,
@@ -1271,6 +1299,9 @@ fn prepare_aggregated_commitment(
     aggregated_at_z = update_agg_challenge.1;
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_at_z = update_agg_challenge.2;
+
+    println!("Aggregated at z 5 {:?}", aggregated_at_z.x.to_string());
+    println!("Aggregation Challenge 5 {:?}", aggregation_challenge.to_string());
 
     update_agg_challenge = update_aggregation_challenge(
         vk_permutation_1_affine,
@@ -1285,6 +1316,9 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_at_z = update_agg_challenge.2;
 
+    println!("Aggregated at z 6 {:?}", aggregated_at_z.x.to_string());
+    println!("Aggregation Challenge 6 {:?}", aggregation_challenge.to_string());
+
     update_agg_challenge = update_aggregation_challenge(
         vk_permutation_2_affine,
         proof_copy_permutation_polys_2_opening_at_z,
@@ -1297,6 +1331,9 @@ fn prepare_aggregated_commitment(
     aggregated_at_z = update_agg_challenge.1;
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_at_z = update_agg_challenge.2;
+
+    println!("Aggregated at z 7 {:?}", aggregated_at_z.x.to_string());
+    println!("Aggregation Challenge 7 {:?}", aggregation_challenge.to_string());
 
     aggregation_challenge = aggregation_challenge.mul(state_v_slot);
     first_t_coeff = aggregation_challenge;
@@ -1318,6 +1355,9 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_at_z = update_agg_challenge.2;
 
+    println!("Aggregated at z 8 {:?}", aggregated_at_z.x.to_string());
+    println!("Aggregation Challenge 8 {:?}", aggregation_challenge.to_string());
+
     update_agg_challenge = update_aggregation_challenge(
         vk_lookup_table_type_affine,
         proof_lookup_table_type_poly_opening_at_z,
@@ -1330,15 +1370,28 @@ fn prepare_aggregated_commitment(
     aggregated_at_z = update_agg_challenge.1;
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_at_z = update_agg_challenge.2;
+    println!("Aggregated at z 9 {:?}", aggregated_at_z.x.to_string());
+    println!("Aggregation Challenge 9 {:?}", aggregation_challenge.to_string());
 
     // storing aggregated opening at z
     // mstore(AGGREGATED_OPENING_AT_Z_SLOT, aggregatedOpeningAtZ)
+    println!(
+        "Aggregated Opening at Z x Slot: {:?}",
+        aggregated_opening_at_z.to_string()
+    );
 
     aggregation_challenge = aggregation_challenge.mul(state_v_slot);
 
+    let state_u = Fr::from_str(
+        "1288818797502384203299534503559211197379962355037926217584736460242183741135",
+    )
+    .unwrap();
+
     let copy_permutation_coeff = aggregation_challenge
-        .mul(state_v_slot)
+        .mul(state_u)
         .add(copy_permutation_first_aggregated_commitment_coeff);
+
+
 
     // proof component
     let proof_copy_permutation_grand_product_x = <G1Point as AffineCurve>::BaseField::from_str(
@@ -1358,10 +1411,7 @@ fn prepare_aggregated_commitment(
     )
     .into_affine();
 
-    let state_u = Fr::from_str(
-        "1288818797502384203299534503559211197379962355037926217584736460242183741135",
-    )
-    .unwrap();
+
 
     let proof_copy_permutation_grand_product_opening_at_z_omega = Fr::from_str(
         "7538059542152278064360430275006244865024464052241262187047297399810715308295",
@@ -1371,8 +1421,20 @@ fn prepare_aggregated_commitment(
     let mut aggregated_z_omega = proof_copy_permutation_grand_product_affine
         .mul(copy_permutation_coeff)
         .into_affine();
+
+    println!("Copy perm coeff {:?}", copy_permutation_coeff.to_string());
+    println!(
+        "Aggfldkhbldkghf Slot: {:?}",
+        aggregated_z_omega.x.to_string()
+    );
+
     let mut aggregated_opening_z_omega =
         proof_copy_permutation_grand_product_opening_at_z_omega.mul(aggregation_challenge);
+
+    println!(
+        "Aggregated Opening at Z Omega x Slot: {:?}",
+        aggregated_opening_z_omega.to_string()
+    );
 
     let proof_state_polys_3_x = <G1Point as AffineCurve>::BaseField::from_str(
         "7648216166271091756697000850759109818942352153393449549967097850294823322486",
@@ -1383,13 +1445,6 @@ fn prepare_aggregated_commitment(
         "13841059918140042479305358189720506803328611470904137853333589893028890921956",
     )
     .unwrap();
-
-    let proof_state_polys_3 = G1Projective::new(
-        proof_state_polys_3_x,
-        proof_state_polys_3_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
 
     let proof_state_polys_3 = G1Projective::new(
         proof_state_polys_3_x,
@@ -1444,6 +1499,9 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_z_omega = update_agg_challenge.2;
 
+    println!("Aggregated at z omega 1 {:?}", aggregated_z_omega.x.to_string());
+    println!("Aggregation Challenge 1 {:?}", aggregation_challenge.to_string());
+
     let proof_lookup_s_poly_x = <G1Point as AffineCurve>::BaseField::from_str(
         "20887469144570360598226846219688412569127314117060464745189593667525340515656",
     )
@@ -1467,12 +1525,12 @@ fn prepare_aggregated_commitment(
     .unwrap();
 
     let proof_lookup_grand_product_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "15834657814168463130145202123584569486416145351650914790360391211128804599867",
+        "9589178903221618453208009241401184562093337063441620358881756562676120576984",
     )
     .unwrap();
 
     let proof_lookup_grand_product_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "19669144057396287036614970272557992315751929115161637121425116755403567873546",
+        "13587607855302777394786571902811537225748207835844766425168460163223723298480",
     )
     .unwrap();
 
@@ -1486,7 +1544,7 @@ fn prepare_aggregated_commitment(
     update_agg_challenge = update_aggregation_challenge_second(
         proof_lookup_s_poly,
         proof_lookup_s_poly_opening_at_z_omega,
-        first_t_coeff,
+        lookup_s_first_aggregated_commitment_coeff,
         aggregation_challenge,
         aggregated_opening_z_omega,
         state_v_slot,
@@ -1497,6 +1555,9 @@ fn prepare_aggregated_commitment(
     aggregated_z_omega = update_agg_challenge.1;
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_z_omega = update_agg_challenge.2;
+
+    println!("Aggregated at z omega 2 {:?}", aggregated_z_omega.x.to_string());
+    println!("Aggregation Challenge 2 {:?}", aggregation_challenge.to_string());
 
     let proof_lookup_grand_product_opening_at_z_omega = Fr::from_str(
         "15834657814168463130145202123584569486416145351650914790360391211128804599867",
@@ -1511,7 +1572,7 @@ fn prepare_aggregated_commitment(
     update_agg_challenge = update_aggregation_challenge_second(
         proof_lookup_grand_product_affine,
         proof_lookup_grand_product_opening_at_z_omega,
-        lookup_s_first_aggregated_commitment_coeff,
+        lookup_grand_product_first_aggregated_commitment_coeff,
         aggregation_challenge,
         aggregated_opening_z_omega,
         state_v_slot,
@@ -1522,6 +1583,11 @@ fn prepare_aggregated_commitment(
     aggregated_z_omega = update_agg_challenge.1;
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_z_omega = update_agg_challenge.2;
+
+    println!("kdfghfgh {:?}", lookup_grand_product_first_aggregated_commitment_coeff.to_string());
+
+    println!("Aggregated at z omega 3 {:?}", aggregated_z_omega.x.to_string());
+    println!("Aggregation Challenge 3 {:?}", aggregation_challenge.to_string());
 
     update_agg_challenge = update_aggregation_challenge_second(
         queries_t_poly_aggregated,
@@ -1538,13 +1604,36 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_z_omega = update_agg_challenge.2;
 
+    println!("Aggregated at z omega 4 {:?}", aggregated_z_omega.x.to_string());
+    println!("Aggregation Challenge 4 {:?}", aggregation_challenge.to_string());
+
     // store aggregated_opening_z_omega somewhere and return it as it might be used somewhere else
 
+    println!(
+        "Aggregated at z x Slot: {:?}",
+        aggregated_at_z.x.to_string()
+    );
+
+    println!(
+        "Aggregated Z Omega x Slot: {:?}",
+        aggregated_z_omega.x.to_string()
+    );
+
     let pairing_pair_with_generator = aggregated_at_z.add(aggregated_z_omega);
+
+    println!(
+        "Pairing Pair with Generator x Slot: {:?}",
+        pairing_pair_with_generator.x.to_string()
+    );
 
     let aggregated_value = aggregated_opening_z_omega
         .mul(state_u)
         .add(aggregated_opening_at_z);
+
+    println!(
+        "Aggregated Value x Slot: {:?}",
+        aggregated_value.to_string()
+    );
 
     // mstore(PAIRING_BUFFER_POINT_X_SLOT, 1)
     //             mstore(PAIRING_BUFFER_POINT_Y_SLOT, 2)
