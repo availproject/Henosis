@@ -326,50 +326,49 @@ pub fn lookupQuotientContribution(pvs: &mut PartialVerifierState) -> Fp256<FrPar
 
 }
 
-pub fn verifyQuotientEvaluation(alpha: Fp256<FrParameters>, z: Fp256<FrParameters>) {
-    let alpha_2 = alpha.mul(alpha);
-    let alpha_3 = alpha_2.mul(alpha);
-    let alpha_4 = alpha_3.mul(alpha);
-    let alpha_5 = alpha_4.mul(alpha);
-    let alpha_6 = alpha_5.mul(alpha);
-    let alpha_7 = alpha_6.mul(alpha);
-    let alpha_8 = alpha_7.mul(alpha);
+pub fn verifyQuotientEvaluation(mut pvs: PartialVerifierState) {
 
-    let l0atz= evaluateLagrangePolyOutOfDomain(0, z);
-
-    let lnmius1atZ = evaluateLagrangePolyOutOfDomain(getDomainSize()-1, z);
+    let alpha_2 = pvs.alpha.mul(pvs.alpha);
+    let alpha_3 = pvs.power_of_alpha_3;
+    let alpha_4 = pvs.power_of_alpha_4;
+    let alpha_5 = pvs.power_of_alpha_5;
+    let alpha_6 = pvs.power_of_alpha_6;
+    let alpha_7 = pvs.power_of_alpha_7;
+    let alpha_8 = pvs.power_of_alpha_8;
 
 
-    let mut pvs = PartialVerifierState{
-        alpha,
-        beta: Fr::from_str("12819959800729781851236209017775043683910680801328587115581833969386363164195").unwrap(),
-        gamma: Fr::from_str("11403742565483582924983523425979943864732047046431924490681313122123733997653").unwrap(),
-        power_of_alpha_2: alpha_2,
-        power_of_alpha_3: alpha_3,
-        power_of_alpha_4: alpha_4,
-        power_of_alpha_5: alpha_5,
-        power_of_alpha_6: alpha_6,
-        power_of_alpha_7: alpha_7,
-        power_of_alpha_8: alpha_8,
-        eta: Fr::from_str("13927658615988103753598521980340228631453479498558491767944846275014039690937").unwrap(),
-        beta_lookup: Fr::from_str("11528514326249514252855703437809342841453735434183305817156029513988866631298").unwrap(),
-        gamma_lookup: Fr::from_str("10143450367578341384865650570084054672128122620763568488049428709968718700978").unwrap(),
-        beta_plus_one: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
-        beta_gamma_plus_gamma: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
-        v: Fr::from_str("13330004428861975879381254388579709216101551406414154978351365682885384794150").unwrap(), 
-        u: Fr::from_str("1288818797502384203299534503559211197379962355037926217584736460242183741135").unwrap(),
-        z: Fr::from_str("2401351998492944598364033620572509016859399460686508186648075303585158829617").unwrap(),
-        z_minus_last_omega: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
-        l_0_at_z: l0atz,
-        l_n_minus_one_at_z: lnmius1atZ,
-        z_in_domain_size: Fr::from_str("8306037114154435423292901166608307526952350843292506299851821833617177949622").unwrap(),
+    let l0atz= evaluateLagrangePolyOutOfDomain(0, pvs.z);
 
-    };
+    let lnmius1atZ = evaluateLagrangePolyOutOfDomain(getDomainSize()-1, pvs.z);
 
+    pvs.l_0_at_z = l0atz;
+    pvs.l_n_minus_one_at_z = lnmius1atZ;
 
-    // println!("l0atz: {}", get_bigint_from_fr(l0atz));
+    // let mut pvs = PartialVerifierState{
+    //     alpha,
+    //     beta: Fr::from_str("12819959800729781851236209017775043683910680801328587115581833969386363164195").unwrap(),
+    //     gamma: Fr::from_str("11403742565483582924983523425979943864732047046431924490681313122123733997653").unwrap(),
+    //     power_of_alpha_2: alpha_2,
+    //     power_of_alpha_3: alpha_3,
+    //     power_of_alpha_4: alpha_4,
+    //     power_of_alpha_5: alpha_5,
+    //     power_of_alpha_6: alpha_6,
+    //     power_of_alpha_7: alpha_7,
+    //     power_of_alpha_8: alpha_8,
+    //     eta: Fr::from_str("13927658615988103753598521980340228631453479498558491767944846275014039690937").unwrap(),
+    //     beta_lookup: Fr::from_str("11528514326249514252855703437809342841453735434183305817156029513988866631298").unwrap(),
+    //     gamma_lookup: Fr::from_str("10143450367578341384865650570084054672128122620763568488049428709968718700978").unwrap(),
+    //     beta_plus_one: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
+    //     beta_gamma_plus_gamma: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
+    //     v: Fr::from_str("13330004428861975879381254388579709216101551406414154978351365682885384794150").unwrap(), 
+    //     u: Fr::from_str("1288818797502384203299534503559211197379962355037926217584736460242183741135").unwrap(),
+    //     z: Fr::from_str("2401351998492944598364033620572509016859399460686508186648075303585158829617").unwrap(),
+    //     z_minus_last_omega: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
+    //     l_0_at_z: l0atz,
+    //     l_n_minus_one_at_z: lnmius1atZ,
+    //     z_in_domain_size: Fr::from_str("8306037114154435423292901166608307526952350843292506299851821833617177949622").unwrap(),
 
-    
+    // };
 
 
     let stateT = l0atz.mul(getPublicInputs());
@@ -396,14 +395,7 @@ pub fn verifyQuotientEvaluation(alpha: Fp256<FrParameters>, z: Fp256<FrParameter
 }
 
 
-pub fn verify(){
-
-    let alpha = Fr::from_str("2283206971795773822103810506163842486205626492327489207776386690517719211772").unwrap();
-    
-    let z = Fr::from_str("2401351998492944598364033620572509016859399460686508186648075303585158829617").unwrap();
-    println!("Verifying....");
-
-    verifyQuotientEvaluation(alpha, z);
+pub fn get_challenges(pvs: &mut PartialVerifierState) {
     let mut transcript = Transcript::new_transcript();
 
     transcript.update_transcript(&get_u8arr_from_fr(getPublicInputs()));
@@ -503,6 +495,50 @@ pub fn verify(){
 
     let uu = transcript.get_transcript_challenge(8);
     println!("uu: {}", BigInt::from_bytes_be(Sign::Plus, &uu));
+
+    let power_of_alpha_1 =  get_fr_from_u8arr(alphaaa.to_vec());
+    let power_of_alpha_2 = power_of_alpha_1.mul(power_of_alpha_1);
+    let power_of_alpha_3 = power_of_alpha_2.mul(power_of_alpha_1);
+    let power_of_alpha_4 = power_of_alpha_3.mul(power_of_alpha_1);
+    let power_of_alpha_5 = power_of_alpha_4.mul(power_of_alpha_1);
+    let power_of_alpha_6 = power_of_alpha_5.mul(power_of_alpha_1);
+    let power_of_alpha_7 = power_of_alpha_6.mul(power_of_alpha_1);
+    let power_of_alpha_8 = power_of_alpha_7.mul(power_of_alpha_1);
+
+    pvs.alpha = power_of_alpha_1;
+    pvs.beta = get_fr_from_u8arr(betaa.to_vec());
+    pvs.gamma = get_fr_from_u8arr(gammma.to_vec());
+    pvs.power_of_alpha_2 = power_of_alpha_2;
+    pvs.power_of_alpha_3 = power_of_alpha_3;
+    pvs.power_of_alpha_4 = power_of_alpha_4;
+    pvs.power_of_alpha_5 = power_of_alpha_5;
+    pvs.power_of_alpha_6 = power_of_alpha_6;
+    pvs.power_of_alpha_7 = power_of_alpha_7;
+    pvs.power_of_alpha_8 = power_of_alpha_8;
+    pvs.eta = get_fr_from_u8arr(etaaa.to_vec());
+    pvs.beta_lookup = get_fr_from_u8arr(beta_lookuppp.to_vec());
+    pvs.gamma_lookup = get_fr_from_u8arr(gamma_lookuppp.to_vec());
+    pvs.beta_plus_one = pvs.beta.add(Fr::from_str("1").unwrap());
+    pvs.beta_gamma_plus_gamma = pvs.beta.mul(pvs.gamma).add(pvs.gamma);
+    pvs.v = get_fr_from_u8arr(vv.to_vec());
+    pvs.u = get_fr_from_u8arr(uu.to_vec());
+    pvs.z = get_fr_from_u8arr(zz.to_vec());
+    pvs.z_minus_last_omega = pvs.z.add(getOmega().pow([getDomainSize()-1]).neg());
+    pvs.z_in_domain_size = zz_in_domain_size;
+
+}
+
+pub fn verify(){
+
+    let alpha = Fr::from_str("2283206971795773822103810506163842486205626492327489207776386690517719211772").unwrap();
+    
+    let z = Fr::from_str("2401351998492944598364033620572509016859399460686508186648075303585158829617").unwrap();
+    println!("Verifying....");
+
+    let mut pvs = PartialVerifierState::new();
+    get_challenges(&mut pvs);
+    verifyQuotientEvaluation(pvs);
+    println!("Verified....");
 
 }
 

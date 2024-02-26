@@ -482,6 +482,35 @@ pub struct PartialVerifierState {
     pub z_in_domain_size: Fp256<FrParameters>,
 }
 
+impl PartialVerifierState{
+    pub fn new() -> Self{
+        PartialVerifierState{
+            alpha: Fp256::<FrParameters>::zero(),
+            beta: Fp256::<FrParameters>::zero(),
+            gamma: Fp256::<FrParameters>::zero(),
+            power_of_alpha_2: Fp256::<FrParameters>::zero(),
+            power_of_alpha_3: Fp256::<FrParameters>::zero(),
+            power_of_alpha_4: Fp256::<FrParameters>::zero(),
+            power_of_alpha_5: Fp256::<FrParameters>::zero(),
+            power_of_alpha_6: Fp256::<FrParameters>::zero(),
+            power_of_alpha_7: Fp256::<FrParameters>::zero(),
+            power_of_alpha_8: Fp256::<FrParameters>::zero(),
+            eta: Fp256::<FrParameters>::zero(),
+            beta_lookup: Fp256::<FrParameters>::zero(),
+            gamma_lookup: Fp256::<FrParameters>::zero(),
+            beta_plus_one: Fp256::<FrParameters>::zero(),
+            beta_gamma_plus_gamma: Fp256::<FrParameters>::zero(),
+            v: Fp256::<FrParameters>::zero(),
+            u: Fp256::<FrParameters>::zero(),
+            z: Fp256::<FrParameters>::zero(),
+            z_minus_last_omega: Fp256::<FrParameters>::zero(),
+            l_0_at_z: Fp256::<FrParameters>::zero(),
+            l_n_minus_one_at_z: Fp256::<FrParameters>::zero(),
+            z_in_domain_size: Fp256::<FrParameters>::zero(),
+        }
+    }
+}
+
 pub fn get_proog_bigint() -> ProofBigInt {
     ProofBigInt {
         c1: (
