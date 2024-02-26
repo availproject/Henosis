@@ -1,14 +1,14 @@
-use crate::utils::get_proog_bigint;
 pub use crate::utils::{
     get_domain_size, get_omegas, get_proof, get_pubSignals, Omegas, Proof, ProofWithPubSignal,
 };
-
+use crate::utils::{get_proog_bigint, VerificationKey};
 use ark_bn254::{
     g1, g1::Parameters, Bn254, Fq, FqParameters, Fr, FrParameters, G1Projective, G2Projective,
 };
 use ark_bn254::{g2, Fq2, Fq2Parameters, G2Affine};
 use ark_ec::group::Group;
 use ark_ec::short_weierstrass_jacobian::GroupAffine;
+use ark_ec::*;
 use ark_ec::*;
 use ark_ff::{
     field_new, Field, Fp256, Fp256Parameters, Fp2ParamsWrapper, One, PrimeField, QuadExtField,
@@ -17,13 +17,6 @@ use ark_ff::{
 use ark_poly::{domain, Polynomial};
 use core::num;
 use num_bigint::*;
-use ark_ec::short_weierstrass_jacobian::GroupAffine;
-use ark_ec::*;
-use ark_ff::{
-    field_new, BigInteger, Field, Fp256, Fp256Parameters, Fp2ParamsWrapper, One, PrimeField, QuadExtField, UniformRand, Zero
-};
-use ark_poly::{domain, Polynomial};
-use core::num;
 use std::fmt::{format, Debug, DebugMap, Display};
 use std::hash::Hash;
 use std::marker::PhantomData;
@@ -34,344 +27,40 @@ use std::vec;
 use num_bigint::BigUint;
 use tiny_keccak::{Hasher, Keccak};
 
-use crate::utils::{get_proog_bigint, get_verification_key, PartialVerifierState};
+use crate::utils::{get_verification_key, PartialVerifierState};
 use num_bigint::*;
-
-use tiny_keccak::{Hasher, Keccak};
-use num_bigint::BigUint;
-
-
 
 pub type G1Point = <Bn254 as PairingEngine>::G1Affine;
 pub type G2Point = <Bn254 as PairingEngine>::G2Affine;
 
 pub fn verify() {
-    // do something here above and beyond !!
+    println!("Verifying....");
+    let mut pvs: PartialVerifierState = PartialVerifierState::new();
+    get_challenges(&mut pvs);
+    verifyQuotientEvaluation(&mut pvs);
 
-    // defining few verification keys here
-    let vk_gate_setup_0_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "18141747246005626051799779950519336123562580942979903067313939969882919590340",
-    )
-    .unwrap();
-    let vk_gate_setup_0_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "3585143329166348536377758970100845939161265326922449384523034507058404859387",
-    )
-    .unwrap();
-    let vk_gate_setup_0_affine = G1Projective::new(
-        vk_gate_setup_0_x,
-        vk_gate_setup_0_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_gate_setup_1_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "1988784351252031472169741801544970435196545636113389178981091085566461895378",
-    )
-    .unwrap();
-    let vk_gate_setup_1_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "6626035475680297406478400665575376989678110111230786600317346925351789769744",
-    )
-    .unwrap();
-    let vk_gate_setup_1_affine = G1Projective::new(
-        vk_gate_setup_1_x,
-        vk_gate_setup_1_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_gate_setup_2_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "6513639166970035139110486703908124080089475463144632993644733293246110638737",
-    )
-    .unwrap();
-    let vk_gate_setup_2_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "977003005220586916659677691095356382823546077624913424654056785190852473821",
-    )
-    .unwrap();
-    let vk_gate_setup_2_affine = G1Projective::new(
-        vk_gate_setup_2_x,
-        vk_gate_setup_2_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_gate_setup_3_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "9230655670735702119620314706239903522998966275916883375733056995058491146717",
-    )
-    .unwrap();
-    let vk_gate_setup_3_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "6511031573008209933978170549284048297810619244182920356477578929223310943678",
-    )
-    .unwrap();
-    let vk_gate_setup_3_affine = G1Projective::new(
-        vk_gate_setup_3_x,
-        vk_gate_setup_3_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_gate_setup_4_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "10364210754997381702522032157284956719005600005128484559781408547053066432115",
-    )
-    .unwrap();
-    let vk_gate_setup_4_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "15781510673347999125058819560304519136658253885351485025763958725578907039774",
-    )
-    .unwrap();
-    let vk_gate_setup_4_affine = G1Projective::new(
-        vk_gate_setup_4_x,
-        vk_gate_setup_4_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_gate_setup_5_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "6154213918416038593868317990163182893460080436875238745368931183847837856697",
-    )
-    .unwrap();
-    let vk_gate_setup_5_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "9816193613520248954417193401298538403248469703169878496524632397336220198726",
-    )
-    .unwrap();
-    let vk_gate_setup_5_affine = G1Projective::new(
-        vk_gate_setup_5_x,
-        vk_gate_setup_5_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_gate_setup_6_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "19453921487316344064341051371567074674850858847513131144999214779949439844146",
-    )
-    .unwrap();
-    let vk_gate_setup_6_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "3886050750811343696486217418179023039649583171214698993490137242899280536841",
-    )
-    .unwrap();
-    let vk_gate_setup_6_affine = G1Projective::new(
-        vk_gate_setup_6_x,
-        vk_gate_setup_6_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_gate_setup_7_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "18183096820971393578641159504664838007531678766243529655378299444935455410876",
-    )
-    .unwrap();
-    let vk_gate_setup_7_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "15483265391607591192398303295188109928858243125143393303657667139744863524129",
-    )
-    .unwrap();
-    let vk_gate_setup_7_affine: GroupAffine<Parameters> = G1Projective::new(
-        vk_gate_setup_7_x,
-        vk_gate_setup_7_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_gate_selectors_0_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "14205344997483453838751247319875941252565270087237127926142565059361638985005",
-    )
-    .unwrap();
-
-    let vk_gate_selectors_0_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "18149743938984840795673757375540800526102537869676573169262794906671381288353",
-    )
-    .unwrap();
-
-    let vk_gate_selectors_0_affine = G1Projective::new(
-        vk_gate_selectors_0_x,
-        vk_gate_selectors_0_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_gate_selectors_1_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "1503845488092386103648065432248698383432228205851738279222364151597624172002",
-    )
-    .unwrap();
-
-    let vk_gate_selectors_1_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "21879317326302769106212942083598833971208881826953277740248006269619105618468",
-    )
-    .unwrap();
-
-    let vk_gate_selectors_1_affine = G1Projective::new(
-        vk_gate_selectors_1_x,
-        vk_gate_selectors_1_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_permutation_0_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "8887241309915046403987404266456327687371133714343160532258729830564274172645",
-    )
-    .unwrap();
-
-    let vk_permutation_0_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "8838889250911714005233937797167402728703848047545768220993868516057541850998",
-    )
-    .unwrap();
-
-    let vk_permutation_0_affine = G1Projective::new(
-        vk_permutation_0_x,
-        vk_permutation_0_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_permutation_1_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "17866351466611640086959034867757326106027853848164149106032164116282644231778",
-    )
-    .unwrap();
-
-    let vk_permutation_1_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "16798005383698675803387212328766642387080095868926572635337761193563305801328",
-    )
-    .unwrap();
-
-    let vk_permutation_1_affine = G1Projective::new(
-        vk_permutation_1_x,
-        vk_permutation_1_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_permutation_2_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "4326790911196090693615815054100226120696011467971033242010235740528024653838",
-    )
-    .unwrap();
-
-    let vk_permutation_2_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "2667904803179432515334522273897040123387024681693314908213001653352082428084",
-    )
-    .unwrap();
-
-    let vk_permutation_2_affine = G1Projective::new(
-        vk_permutation_2_x,
-        vk_permutation_2_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_permutation_3_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "13241348285608918471072487692417300120464835839349641979417147697821842654908",
-    )
-    .unwrap();
-
-    let vk_permutation_3_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "6667438418074879936583072531555518534485986002689774883125728666911040734128",
-    )
-    .unwrap();
-
-    let vk_permutation_3_affine = G1Projective::new(
-        vk_permutation_3_x,
-        vk_permutation_3_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_lookp_table_0_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "20045313662746578028950791395157660351198208045597010788369662325700141348443",
-    )
-    .unwrap();
-
-    let vk_lookp_table_0_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "2200761695078532224145807378118591946349840073460005094399078719163643466856",
-    )
-    .unwrap();
-
-    let vk_lookp_table_0_affine = G1Projective::new(
-        vk_lookp_table_0_x,
-        vk_lookp_table_0_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_lookp_table_1_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "13866646217607640441607041956684111087071997201218815349460750486791109380780",
-    )
-    .unwrap();
-
-    let vk_lookp_table_1_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "13178446611795019678701878053235714968797421377761816259103804833273256298333",
-    )
-    .unwrap();
-
-    let vk_lookp_table_1_affine = G1Projective::new(
-        vk_lookp_table_1_x,
-        vk_lookp_table_1_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_lookp_table_2_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "5057503605752869531452842486824745179648819794307492731589448195268672785801",
-    )
-    .unwrap();
-
-    let vk_lookp_table_2_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "8597434312520299647191152876265164941580478223412397470356037586993894367875",
-    )
-    .unwrap();
-
-    let vk_lookp_table_2_affine = G1Projective::new(
-        vk_lookp_table_2_x,
-        vk_lookp_table_2_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_lookp_table_3_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "1342318055425277544055386589364579054544440640110901993487861472578322387903",
-    )
-    .unwrap();
-
-    let vk_lookp_table_3_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "4438354282468267034382897187461199764068502038746983055473062465446039509158",
-    )
-    .unwrap();
-
-    let vk_lookp_table_3_affine = G1Projective::new(
-        vk_lookp_table_3_x,
-        vk_lookp_table_3_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_lookup_selector_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "21395113354694454854762351476959063468617925208554049154496069024740903092231",
-    )
-    .unwrap();
-
-    let vk_lookup_selector_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "15891706754776486805263804095178072926455306765747241658585867789806580351077",
-    )
-    .unwrap();
-
-    let vk_lookup_selector_affine = G1Projective::new(
-        vk_lookup_selector_x,
-        vk_lookup_selector_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let vk_lookup_table_type_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "13676499092754057396636024302761872225487134427308588428518404161282906944615",
-    )
-    .unwrap();
-
-    let vk_lookup_table_type_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "15549366785750703306676216604027102943243480133735900281635344353668198401192",
-    )
-    .unwrap();
-
-    let vk_lookup_table_type_affine = G1Projective::new(
-        vk_lookup_table_type_x,
-        vk_lookup_table_type_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
+    let verification_key: VerificationKey = get_verification_key();
+    let proof: Proof = get_proof();
+    let vk_gate_setup_0_affine = verification_key.gate_setup[0];
+    let vk_gate_setup_1_affine = verification_key.gate_setup[1];
+    let vk_gate_setup_2_affine = verification_key.gate_setup[2];
+    let vk_gate_setup_3_affine = verification_key.gate_setup[3];
+    let vk_gate_setup_4_affine = verification_key.gate_setup[4];
+    let vk_gate_setup_5_affine = verification_key.gate_setup[5];
+    let vk_gate_setup_6_affine = verification_key.gate_setup[6];
+    let vk_gate_setup_7_affine = verification_key.gate_setup[7];
+    let vk_gate_selectors_0_affine = verification_key.gate_selectors[0];
+    let vk_gate_selectors_1_affine = verification_key.gate_selectors[1];
+    let vk_permutation_0_affine = verification_key.permutation[0];
+    let vk_permutation_1_affine = verification_key.permutation[1];
+    let vk_permutation_2_affine = verification_key.permutation[2];
+    let vk_permutation_3_affine = verification_key.permutation[3];
+    let vk_lookp_table_0_affine = verification_key.lookup_table[0];
+    let vk_lookp_table_1_affine = verification_key.lookup_table[1];
+    let vk_lookp_table_2_affine = verification_key.lookup_table[2];
+    let vk_lookp_table_3_affine = verification_key.lookup_table[3];
+    let vk_lookup_selector_affine = verification_key.lookup_selector;
+    let vk_lookup_table_type_affine = verification_key.lookup_table_type;
 
     let queries = prepare_queries(
         vk_gate_setup_0_affine,
@@ -388,6 +77,8 @@ pub fn verify() {
         vk_lookp_table_1_affine,
         vk_lookp_table_2_affine,
         vk_lookp_table_3_affine,
+        pvs.clone(),
+        proof.clone(),
     );
 
     let lookup_s_first_aggregated_commitment_coeff = queries.3;
@@ -405,107 +96,35 @@ pub fn verify() {
         lookup_s_first_aggregated_commitment_coeff,
         queries.4,
         queries.5,
+        pvs.clone(),
+        proof.clone(),
     );
 }
-
-// params
-// QUERIES_AT_Z_1_X_SLOT,
-// stateOpening0AtZ,
-// stateOpening1AtZ,
-// stateOpening2AtZ,
-// stateOpening3AtZ
 
 fn add_assign_lookup_linearisation_contribution_with_v(
     queries_at_z_1: GroupAffine<Parameters>,
     state_opening_0_z: Fr,
     state_opening_1_z: Fr,
     state_opening_2_z: Fr,
+    proof: Proof,
+    pvs: PartialVerifierState
 ) -> (Fr, Fr) {
-    // this is part of proof
-    let proof_copy_permutation_grand_product_opening_at_z_omega = Fr::from_str(
-        "7538059542152278064360430275006244865024464052241262187047297399810715308295",
-    )
-    .unwrap();
-
-    let state_power_of_alpha_6 = Fr::from_str(
-        "8319164303429084971911245066442068933512569563880543098813813308827829606918",
-    )
-    .unwrap();
-
-    let state_power_of_alpha_7 = Fr::from_str(
-        "5129674270777039881019141106592790354882335596282377700229200108640921885885",
-    )
-    .unwrap();
-
-    let state_power_of_alpha_8 = Fr::from_str(
-        "7368618184218696583873857280284780670315006906762991940416936213864621895772",
-    )
-    .unwrap();
-
-    let state_l_n_minus_1_at_z = Fr::from_str(
-        "5758032436361615273499003282171634310788590443862971126347537499319196954720",
-    )
-    .unwrap();
-
-    let state_z_minus_last_omega = Fr::from_str(
-        "6960146633092105328029573621741727691156028174137047893187470702741186149724",
-    )
-    .unwrap();
-
-    let state_v_slot = Fr::from_str(
-        "13330004428861975879381254388579709216101551406414154978351365682885384794150",
-    )
-    .unwrap();
-
-    let proof_lookup_t_poly_opening_at_z_omega = Fr::from_str(
-        "1526611985826438991010848350624117895374304477623813636492366499941649169423",
-    )
-    .unwrap();
-
-    let proof_lookup_t_poly_opening_at_z =
-        Fr::from_str("790573260182333997045997353662764971783884673183303056517854663274184491762")
-            .unwrap();
-
-    let state_beta_lookup = Fr::from_str(
-        "11528514326249514252855703437809342841453735434183305817156029513988866631298",
-    )
-    .unwrap();
-
-    let state_beta_gamma_plus_gamma = Fr::from_str(
-        "11983334460880557356576830398288108328144139034428008470735158345550044764455",
-    )
-    .unwrap();
-
-    let state_eta = Fr::from_str(
-        "13927658615988103753598521980340228631453479498558491767944846275014039690937",
-    )
-    .unwrap();
-
-    let proof_looup_table_type_poly_opening_at_z = Fr::from_str(
-        "7320378240983578507320264228195167543809287353218722858998931336614363841795",
-    )
-    .unwrap();
-
-    let proof_lookup_selector_poly_opening_at_z = Fr::from_str(
-        "2209111850691644114898474232757656611086726698453992180215187737049963638713",
-    )
-    .unwrap();
-
-    let state_gamma_lookup = Fr::from_str(
-        "10143450367578341384865650570084054672128122620763568488049428709968718700978",
-    )
-    .unwrap();
-
-    let state_beta_plus_one = Fr::from_str(
-        "11528514326249514252855703437809342841453735434183305817156029513988866631299",
-    )
-    .unwrap();
-
-    let proof_lookup_grand_product_opening_at_z_omega = Fr::from_str(
-        "15834657814168463130145202123584569486416145351650914790360391211128804599867",
-    )
-    .unwrap();
-
+    let state_power_of_alpha_6 = pvs.power_of_alpha_6;
+    let state_power_of_alpha_7 = pvs.power_of_alpha_7;
+    let state_power_of_alpha_8 = pvs.power_of_alpha_8;
+    let state_l_n_minus_1_at_z = pvs.l_n_minus_one_at_z;
+    let state_z_minus_last_omega = pvs.z_minus_last_omega;
+    let state_v_slot = pvs.v;
+    let proof_lookup_t_poly_opening_at_z_omega = proof.lookup_t_poly_opening_at_z_omega;
+    let proof_lookup_t_poly_opening_at_z = proof.lookup_t_poly_opening_at_z;
+    let state_beta_lookup = pvs.beta_lookup;
+    let state_beta_gamma_plus_gamma = pvs.beta_gamma_plus_gamma;
+    let state_eta = pvs.eta;
+    let proof_looup_table_type_poly_opening_at_z = proof.lookup_table_type_poly_opening_at_z;
+    let proof_lookup_selector_poly_opening_at_z = proof.lookup_selector_poly_opening_at_z;
+    let state_gamma_lookup = pvs.gamma_lookup;
+    let state_beta_plus_one = pvs.beta_plus_one;
+    let proof_lookup_grand_product_opening_at_z_omega = proof.lookup_grand_product_opening_at_z_omega;
     // check is this assignment even correct ??
     let mut factor = proof_lookup_grand_product_opening_at_z_omega;
     factor = factor.mul(state_power_of_alpha_6);
@@ -567,57 +186,25 @@ fn add_assign_permutation_linearisation_contribution_with_v(
     state_opening_2_z: Fr,
     state_opening_3_z: Fr,
     vk_permutation_3_affine: GroupAffine<Parameters>,
+    proof: Proof,
+    pvs: PartialVerifierState,
 ) -> (GroupAffine<Parameters>, Fr) {
-    let state_power_of_alpha_4 =
-        Fr::from_str("734209011026075698694513990691048474879478463182218074328095486857043273273")
-            .unwrap();
-
-    let state_power_of_alpha_5 = Fr::from_str(
-        "7399691123282490587915741115649146455372988827023544966495551648103740997779",
-    )
-    .unwrap();
-
+    let state_power_of_alpha_4 = pvs.power_of_alpha_4;
+    let state_power_of_alpha_5 = pvs.power_of_alpha_5;
     // z and beta are challeneges
-    let state_z_slot = Fr::from_str(
-        "2401351998492944598364033620572509016859399460686508186648075303585158829617",
-    )
-    .unwrap();
-
-    let state_beta = Fr::from_str(
-        "12819959800729781851236209017775043683910680801328587115581833969386363164195",
-    )
-    .unwrap();
-
-    let state_gamma = Fr::from_str(
-        "11403742565483582924983523425979943864732047046431924490681313122123733997653",
-    )
-    .unwrap();
-
-    let state_v_slot = Fr::from_str(
-        "13330004428861975879381254388579709216101551406414154978351365682885384794150",
-    )
-    .unwrap();
+    let state_z_slot = pvs.z;
+    let state_beta = pvs.beta;
+    let state_gamma = pvs.gamma;
+    let state_v_slot = pvs.v;
 
     // this is part of proof
-    let proof_copy_permutation_grand_product_opening_at_z_omega = Fr::from_str(
-        "7538059542152278064360430275006244865024464052241262187047297399810715308295",
-    )
-    .unwrap();
+    let proof_copy_permutation_grand_product_opening_at_z_omega = proof.copy_permutation_grand_product_opening_at_z_omega;
 
-    let proof_copy_permutation_polys_0_opening_at_z = Fr::from_str(
-        "5148318317103434325405029846136965801071929637258934964927797937732176388469",
-    )
-    .unwrap();
+    let proof_copy_permutation_polys_0_opening_at_z = proof.copy_permutation_polys_0_opening_at_z;
 
-    let proof_copy_permutation_polys_1_opening_at_z = Fr::from_str(
-        "9350083133715632760163946740136758384048496610034417316968652465998615928235",
-    )
-    .unwrap();
+    let proof_copy_permutation_polys_1_opening_at_z = proof.copy_permutation_polys_1_opening_at_z;
 
-    let proof_copy_permutation_polys_2_opening_at_z = Fr::from_str(
-        "20470364254908040055404858903350518240383939034306565348098332307740905863542",
-    )
-    .unwrap();
+    let proof_copy_permutation_polys_2_opening_at_z = proof.copy_permutation_polys_2_opening_at_z;
 
     let non_residue_0 = Fr::from_str("5").unwrap();
     let non_residue_1 = Fr::from_str("7").unwrap();
@@ -649,10 +236,10 @@ fn add_assign_permutation_linearisation_contribution_with_v(
     println!("intermediate_value: {:?}", intermediate_value.to_string());
 
     // calcualated somewhere in the middle
-    let state_l_0_at_z = Fr::from_str(
-        "16998705531439461081194953598960002453935573094468931463486819379249964474322",
-    )
-    .unwrap();
+    let state_l_0_at_z = pvs.l_0_at_z;
+
+    println!("State L 0 at Z: {:?}", state_l_0_at_z.to_string());
+
 
     factor = factor.add(state_l_0_at_z.mul(state_power_of_alpha_5));
     factor = factor.mul(state_v_slot);
@@ -699,26 +286,14 @@ fn add_assign_rescue_customgate_linearisation_contribution_with_v(
     state_opening_2_z: Fr,
     state_opening_3_z: Fr,
     vk_gate_selectors_1_affine: GroupAffine<Parameters>,
+    proof: Proof,
+    pvs: PartialVerifierState,
 ) -> GroupAffine<Parameters> {
     // challenges wire later
-    let state_alpha_slot = Fr::from_str(
-        "2283206971795773822103810506163842486205626492327489207776386690517719211772",
-    )
-    .unwrap();
-
-    let state_power_of_alpha_2 =
-        Fr::from_str("826184778216175497174816455317911134904368857235156468525135792912866513770")
-            .unwrap();
-
-    let state_power_of_alpha_3 = Fr::from_str(
-        "11473813489823724163756584140835327793445011271247834568957645433130065406474",
-    )
-    .unwrap();
-
-    let state_v_slot = Fr::from_str(
-        "13330004428861975879381254388579709216101551406414154978351365682885384794150",
-    )
-    .unwrap();
+    let state_alpha_slot = pvs.alpha;
+    let state_power_of_alpha_2 = pvs.power_of_alpha_2;
+    let state_power_of_alpha_3 = pvs.power_of_alpha_3;
+    let state_v_slot = pvs.v;
 
     let mut accumulator: Fr;
     let mut intermediate_value: Fr;
@@ -758,6 +333,8 @@ fn main_gate_linearisation_contribution_with_v(
     state_opening_1_z: Fr,
     state_opening_2_z: Fr,
     state_opening_3_z: Fr,
+    proof: Proof,
+    pvs: PartialVerifierState,
 ) -> GroupAffine<Parameters> {
     let mut queries_at_z_1 = vk_gate_setup_0_affine.mul(state_opening_0_z).into_affine();
     queries_at_z_1 =
@@ -779,22 +356,13 @@ fn main_gate_linearisation_contribution_with_v(
     queries_at_z_1 = queries_at_z_1.add(vk_gate_setup_6_affine);
 
     // proof value
-    let proof_state_polys_3_opening_at_z_omega_slot = Fr::from_str(
-        "15977681115418510430689616723041331137718448474191693270665710012377948663376",
-    )
-    .unwrap();
-
+    let proof_state_polys_3_opening_at_z_omega_slot = proof.state_poly_3_opening_at_z_omega;
+    
     // proof value
-    let proof_gate_selectors_0_opening_at_z = Fr::from_str(
-        "8148483208534253915927418266616456459152123251080630562782462708192922425729",
-    )
-    .unwrap();
+    let proof_gate_selectors_0_opening_at_z = proof.gate_selectors_0_opening_at_z;
 
     // challenge
-    let state_v_slot = Fr::from_str(
-        "13330004428861975879381254388579709216101551406414154978351365682885384794150",
-    )
-    .unwrap();
+    let state_v_slot = pvs.v;
 
     queries_at_z_1 = queries_at_z_1.add(
         vk_gate_setup_7_affine
@@ -826,81 +394,27 @@ fn prepare_queries(
     vk_lookp_table_1_affine: GroupAffine<Parameters>,
     vk_lookp_table_2_affine: GroupAffine<Parameters>,
     vk_lookp_table_3_affine: GroupAffine<Parameters>,
+    pvs: PartialVerifierState,
+    proof: Proof,
 ) -> (
     GroupAffine<Parameters>,
     GroupAffine<Parameters>,
     Fr,
     Fr,
     GroupAffine<Parameters>,
-    Fr
+    Fr,
 ) {
-    let z_domain_size = Fr::from_str(
-        "8306037114154435423292901166608307526952350843292506299851821833617177949622",
-    )
-    .unwrap();
+    let z_domain_size = pvs.z_in_domain_size;
+
     let mut current_z = z_domain_size;
-    // let proof_quotient_poly_parts_0_x_slot = Fr::from_str("196342703472148724972325952133748424889705103389890345777635364023975370216").unwrap();
-    // let proof_quotient_poly_parts_0_y_slot = Fr::from_str("17614899337516641177585232833949194582105836997053025970644047796682698082429").unwrap();
+    // println!("kjgdfsfjkdghdf k {:?} ", proof.q)
+    let proof_quotient_poly_parts_0_affine = proof.quotient_poly_parts_0;
 
-    let proof_quotient_poly_parts_0_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "196342703472148724972325952133748424889705103389890345777635364023975370216",
-    )
-    .unwrap();
-    let proof_quotient_poly_parts_0_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "17614899337516641177585232833949194582105836997053025970644047796682698082429",
-    )
-    .unwrap();
-    let proof_quotient_poly_parts_0_affine = G1Projective::new(
-        proof_quotient_poly_parts_0_x,
-        proof_quotient_poly_parts_0_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
+    let proof_quotient_poly_parts_1_affine = proof.quotient_poly_parts_1;
 
-    let proof_quotient_poly_parts_1_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "19614815976847516185424338640248227600024228957312527212029765128340301045570",
-    )
-    .unwrap();
-    let proof_quotient_poly_parts_1_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "19288179487455265641230293305090848088167777073195579481424735403001454843339",
-    )
-    .unwrap();
-    let proof_quotient_poly_parts_1_affine = G1Projective::new(
-        proof_quotient_poly_parts_1_x,
-        proof_quotient_poly_parts_1_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
+    let proof_quotient_poly_parts_2_affine = proof.quotient_poly_parts_2;
 
-    let proof_quotient_poly_parts_2_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "21322627345806747285424422540651003500043705316685983517122519070872560726065",
-    )
-    .unwrap();
-    let proof_quotient_poly_parts_2_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "5678361803052355042251071216263713790429312783198484492885487189884430612397",
-    )
-    .unwrap();
-    let proof_quotient_poly_parts_2_affine = G1Projective::new(
-        proof_quotient_poly_parts_2_x,
-        proof_quotient_poly_parts_2_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let proof_quotient_poly_parts_3_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "9002531254955551070536912940387987650245696807782066392861703106041441260752",
-    )
-    .unwrap();
-    let proof_quotient_poly_parts_3_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "17776553760579063399907357086380850714130127374962466333241947482218961553245",
-    )
-    .unwrap();
-    let proof_quotient_poly_parts_3_affine = G1Projective::new(
-        proof_quotient_poly_parts_3_x,
-        proof_quotient_poly_parts_3_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
+    let proof_quotient_poly_parts_3_affine = proof.quotient_poly_parts_3;
 
     let mut queries_at_z_0 = proof_quotient_poly_parts_1_affine
         .mul(z_domain_size)
@@ -927,22 +441,13 @@ fn prepare_queries(
     println!("Queries at Z 0 x Slot: {:?}", queries_at_z_0.x.to_string());
     println!("Queries at Z 0 y Slot: {:?}", queries_at_z_0.y.to_string());
 
-    let state_opening_0_z = Fr::from_str(
-        "3025664892310257295690669366416646012226101098007398549232319754774186205803",
-    )
-    .unwrap();
-    let state_opening_1_z = Fr::from_str(
-        "2103479791900830811261997581494396289927820373808412796596131379364316767264",
-    )
-    .unwrap();
-    let state_opening_2_z = Fr::from_str(
-        "9746738055974100534724688319587624714000386943764852782487326466491706467598",
-    )
-    .unwrap();
-    let state_opening_3_z = Fr::from_str(
-        "3117440667388512249305167413828803431193175159348741120837367035359253515212",
-    )
-    .unwrap();
+    let state_opening_0_z = proof.state_poly_0_opening_at_z;
+
+    let state_opening_1_z = proof.state_poly_1_opening_at_z;
+
+    let state_opening_2_z = proof.state_poly_2_opening_at_z;
+
+    let state_opening_3_z = proof.state_poly_3_opening_at_z;
 
     let mut queries_at_z_1 = main_gate_linearisation_contribution_with_v(
         vk_gate_setup_0_affine,
@@ -957,6 +462,8 @@ fn prepare_queries(
         state_opening_1_z,
         state_opening_2_z,
         state_opening_3_z,
+        proof.clone(),
+        pvs.clone()
     );
 
     println!("Queries at Z 1 x Slot: {:?}", queries_at_z_1.x.to_string());
@@ -969,6 +476,8 @@ fn prepare_queries(
         state_opening_2_z,
         state_opening_3_z,
         vk_gate_selectors_1_affine,
+        proof.clone(),
+        pvs.clone()
     );
 
     println!(" Queries at Z 1 x Slot: {:?}", queries_at_z_1.x.to_string());
@@ -983,6 +492,8 @@ fn prepare_queries(
         state_opening_2_z,
         state_opening_3_z,
         vk_permutation_3_affine,
+        proof.clone(),
+        pvs.clone()
     );
 
     queries_at_z_1 = resp.0;
@@ -992,19 +503,19 @@ fn prepare_queries(
     println!("Queries at Z 1 y Slot: {:?}", queries_at_z_1.y.to_string());
 
     // we are assigning few things here internally which would be required later on
-    let (lookup_s_first_aggregated_commitment_coeff ,
-        lookup_grand_product_first_aggregated_commitment_coeff) =
-        add_assign_lookup_linearisation_contribution_with_v(
-            queries_at_z_1,
-            state_opening_0_z,
-            state_opening_1_z,
-            state_opening_2_z,
-        );
+    let (
+        lookup_s_first_aggregated_commitment_coeff,
+        lookup_grand_product_first_aggregated_commitment_coeff,
+    ) = add_assign_lookup_linearisation_contribution_with_v(
+        queries_at_z_1,
+        state_opening_0_z,
+        state_opening_1_z,
+        state_opening_2_z,
+        proof.clone(),
+        pvs.clone()
+    );
 
-    let state_eta = Fr::from_str(
-        "13927658615988103753598521980340228631453479498558491767944846275014039690937",
-    )
-    .unwrap();
+    let state_eta = pvs.eta;
 
     let eta = state_eta;
     let mut currenteta = eta;
@@ -1042,7 +553,7 @@ fn prepare_queries(
         copy_permutation_first_aggregated_commitment_coeff,
         lookup_s_first_aggregated_commitment_coeff,
         queries_t_poly_aggregated,
-        lookup_grand_product_first_aggregated_commitment_coeff
+        lookup_grand_product_first_aggregated_commitment_coeff,
     )
 }
 
@@ -1053,7 +564,7 @@ fn prepare_aggregated_commitment(
         Fr,
         Fr,
         GroupAffine<Parameters>,
-        Fr
+        Fr,
     ),
     vk_gate_selectors_0_affine: GroupAffine<Parameters>,
     vk_gate_selectors_1_affine: GroupAffine<Parameters>,
@@ -1066,136 +577,52 @@ fn prepare_aggregated_commitment(
     lookup_s_first_aggregated_commitment_coeff: Fr,
     queries_t_poly_aggregated: GroupAffine<Parameters>,
     lookup_grand_product_first_aggregated_commitment_coeff: Fr,
+    pvs: PartialVerifierState,
+    proof: Proof,
 ) {
     let queries_z_0 = queries.0;
     let queries_z_1 = queries.1;
 
-    println!(
-        "Queries Z 0 x Slot: {:?}",
-        queries_z_0.x.to_string()
-    );
+    println!("Queries Z 0 x Slot: {:?}", queries_z_0.x.to_string());
     let mut aggregation_challenge = Fr::from_str("1").unwrap();
 
     let first_d_coeff: Fr;
     let first_t_coeff: Fr;
 
     let mut aggregated_at_z = queries_z_0;
-    let proof_quotient_poly_opening_at_z_slot = Fr::from_str(
-        "9314291787638126749568703763833741152670265991986629997655170540522333691468",
-    )
-    .unwrap();
+    let proof_quotient_poly_opening_at_z_slot = proof.quotient_poly_opening_at_z;
 
-    let state_v_slot = Fr::from_str(
-        "13330004428861975879381254388579709216101551406414154978351365682885384794150",
-    )
-    .unwrap();
+    let state_v_slot = pvs.v;
 
-    let proof_linearisation_poly_opening_at_z_slot = Fr::from_str(
-        "19343833585712990921041961276646163448505065738578449210211290373092736702345",
-    )
-    .unwrap();
+    let proof_linearisation_poly_opening_at_z_slot = proof.linearisation_poly_opening_at_z;
 
-    let proof_state_polys_0_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "1481927715054811733804695304084001679108833716381348939730805268145753672319",
-    )
-    .unwrap();
+    let proof_state_polys_0 = proof.state_poly_0;
 
-    let proof_state_polys_0_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "19669144057396287036614970272557992315751929115161637121425116755403567873546",
-    )
-    .unwrap();
+    let proof_state_polys_1 = proof.state_poly_1;
 
-    let proof_state_polys_0 = G1Projective::new(
-        proof_state_polys_0_x,
-        proof_state_polys_0_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
+    let proof_state_polys_2 = proof.state_poly_2;
 
-    let proof_state_polys_1_x: Fp256<FqParameters> = <G1Point as AffineCurve>::BaseField::from_str(
-        "682323284285379543874820022851345346716905264262521335320579112562769002731",
-    )
-    .unwrap();
+    let state_opening_0_z = proof.state_poly_0_opening_at_z;
 
-    let proof_state_polys_1_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "5217046082481373877595103417334854412976806729710145608068750987850547916448",
-    )
-    .unwrap();
+    let state_opening_1_z = proof.state_poly_1_opening_at_z;
 
-    let proof_state_polys_1 = G1Projective::new(
-        proof_state_polys_1_x,
-        proof_state_polys_1_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
+    let state_opening_2_z = proof.state_poly_2_opening_at_z;
 
-    let proof_state_polys_2_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "11521515194924070836496020366293362780278763599237451670444937035209680455608",
-    )
-    .unwrap();
+    let state_opening_3_z = proof.state_poly_3_opening_at_z;
 
-    let proof_state_polys_2_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "16730301635986498141605740614067891009670237901703266245689883569759929817706",
-    )
-    .unwrap();
+    let proof_gate_selectors_0_opening_at_z = proof.gate_selectors_0_opening_at_z;
 
-    let proof_state_polys_2 = G1Projective::new(
-        proof_state_polys_2_x,
-        proof_state_polys_2_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
+    let proof_copy_permutation_polys_0_opening_at_z = proof.copy_permutation_polys_0_opening_at_z;
 
-    let state_opening_0_z = Fr::from_str(
-        "3025664892310257295690669366416646012226101098007398549232319754774186205803",
-    )
-    .unwrap();
-    let state_opening_1_z = Fr::from_str(
-        "2103479791900830811261997581494396289927820373808412796596131379364316767264",
-    )
-    .unwrap();
-    let state_opening_2_z = Fr::from_str(
-        "9746738055974100534724688319587624714000386943764852782487326466491706467598",
-    )
-    .unwrap();
-    let state_opening_3_z = Fr::from_str(
-        "3117440667388512249305167413828803431193175159348741120837367035359253515212",
-    )
-    .unwrap();
+    let proof_copy_permutation_polys_1_opening_at_z = proof.copy_permutation_polys_1_opening_at_z;
 
-    let proof_gate_selectors_0_opening_at_z = Fr::from_str(
-        "8148483208534253915927418266616456459152123251080630562782462708192922425729",
-    )
-    .unwrap();
+    let proof_copy_permutation_polys_2_opening_at_z = proof.copy_permutation_polys_2_opening_at_z;
 
-    let proof_copy_permutation_polys_0_opening_at_z = Fr::from_str(
-        "5148318317103434325405029846136965801071929637258934964927797937732176388469",
-    )
-    .unwrap();
+    let proof_lookup_t_poly_opening_at_z = proof.lookup_t_poly_opening_at_z;
 
-    let proof_copy_permutation_polys_1_opening_at_z = Fr::from_str(
-        "9350083133715632760163946740136758384048496610034417316968652465998615928235",
-    )
-    .unwrap();
+    let proof_lookup_selector_poly_opening_at_z = proof.lookup_selector_poly_opening_at_z;
 
-    let proof_copy_permutation_polys_2_opening_at_z = Fr::from_str(
-        "20470364254908040055404858903350518240383939034306565348098332307740905863542",
-    )
-    .unwrap();
-
-    let proof_lookup_t_poly_opening_at_z =
-        Fr::from_str("790573260182333997045997353662764971783884673183303056517854663274184491762")
-            .unwrap();
-
-    let proof_lookup_selector_poly_opening_at_z = Fr::from_str(
-        "2209111850691644114898474232757656611086726698453992180215187737049963638713",
-    )
-    .unwrap();
-
-    let proof_lookup_table_type_poly_opening_at_z = Fr::from_str(
-        "7320378240983578507320264228195167543809287353218722858998931336614363841795",
-    )
-    .unwrap();
+    let proof_lookup_table_type_poly_opening_at_z = proof.lookup_table_type_poly_opening_at_z;
 
     let mut aggregated_opening_at_z = proof_quotient_poly_opening_at_z_slot;
 
@@ -1238,12 +665,14 @@ fn prepare_aggregated_commitment(
     );
 
     aggregated_at_z = update_agg_challenge.1;
-    
+
     println!("Aggregated at z 1 {:?}", aggregated_at_z.x.to_string());
 
-
     aggregation_challenge = update_agg_challenge.0;
-    println!("Aggregation Challenge 1 {:?}", aggregation_challenge.to_string());
+    println!(
+        "Aggregation Challenge 1 {:?}",
+        aggregation_challenge.to_string()
+    );
     aggregated_opening_at_z = update_agg_challenge.2;
 
     update_agg_challenge = update_aggregation_challenge(
@@ -1259,8 +688,10 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_at_z = update_agg_challenge.2;
     println!("Aggregated at z 2 {:?}", aggregated_at_z.x.to_string());
-    println!("Aggregation Challenge 2 {:?}", aggregation_challenge.to_string());
-
+    println!(
+        "Aggregation Challenge 2 {:?}",
+        aggregation_challenge.to_string()
+    );
 
     update_agg_challenge = update_aggregation_challenge(
         proof_state_polys_2,
@@ -1275,8 +706,10 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_at_z = update_agg_challenge.2;
     println!("Aggregated at z 3 {:?}", aggregated_at_z.x.to_string());
-    println!("Aggregation Challenge 3 {:?}", aggregation_challenge.to_string());
-
+    println!(
+        "Aggregation Challenge 3 {:?}",
+        aggregation_challenge.to_string()
+    );
 
     aggregation_challenge = aggregation_challenge.mul(state_v_slot);
     first_d_coeff = aggregation_challenge;
@@ -1299,9 +732,10 @@ fn prepare_aggregated_commitment(
     aggregated_opening_at_z = update_agg_challenge.2;
 
     println!("Aggregated at z 4 {:?}", aggregated_at_z.x.to_string());
-    println!("Aggregation Challenge 4 {:?}", aggregation_challenge.to_string());
-
-
+    println!(
+        "Aggregation Challenge 4 {:?}",
+        aggregation_challenge.to_string()
+    );
 
     update_agg_challenge = update_aggregation_challenge(
         vk_permutation_0_affine,
@@ -1317,7 +751,10 @@ fn prepare_aggregated_commitment(
     aggregated_opening_at_z = update_agg_challenge.2;
 
     println!("Aggregated at z 5 {:?}", aggregated_at_z.x.to_string());
-    println!("Aggregation Challenge 5 {:?}", aggregation_challenge.to_string());
+    println!(
+        "Aggregation Challenge 5 {:?}",
+        aggregation_challenge.to_string()
+    );
 
     update_agg_challenge = update_aggregation_challenge(
         vk_permutation_1_affine,
@@ -1333,7 +770,10 @@ fn prepare_aggregated_commitment(
     aggregated_opening_at_z = update_agg_challenge.2;
 
     println!("Aggregated at z 6 {:?}", aggregated_at_z.x.to_string());
-    println!("Aggregation Challenge 6 {:?}", aggregation_challenge.to_string());
+    println!(
+        "Aggregation Challenge 6 {:?}",
+        aggregation_challenge.to_string()
+    );
 
     update_agg_challenge = update_aggregation_challenge(
         vk_permutation_2_affine,
@@ -1349,7 +789,10 @@ fn prepare_aggregated_commitment(
     aggregated_opening_at_z = update_agg_challenge.2;
 
     println!("Aggregated at z 7 {:?}", aggregated_at_z.x.to_string());
-    println!("Aggregation Challenge 7 {:?}", aggregation_challenge.to_string());
+    println!(
+        "Aggregation Challenge 7 {:?}",
+        aggregation_challenge.to_string()
+    );
 
     aggregation_challenge = aggregation_challenge.mul(state_v_slot);
     first_t_coeff = aggregation_challenge;
@@ -1372,7 +815,10 @@ fn prepare_aggregated_commitment(
     aggregated_opening_at_z = update_agg_challenge.2;
 
     println!("Aggregated at z 8 {:?}", aggregated_at_z.x.to_string());
-    println!("Aggregation Challenge 8 {:?}", aggregation_challenge.to_string());
+    println!(
+        "Aggregation Challenge 8 {:?}",
+        aggregation_challenge.to_string()
+    );
 
     update_agg_challenge = update_aggregation_challenge(
         vk_lookup_table_type_affine,
@@ -1387,7 +833,10 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_at_z = update_agg_challenge.2;
     println!("Aggregated at z 9 {:?}", aggregated_at_z.x.to_string());
-    println!("Aggregation Challenge 9 {:?}", aggregation_challenge.to_string());
+    println!(
+        "Aggregation Challenge 9 {:?}",
+        aggregation_challenge.to_string()
+    );
 
     // storing aggregated opening at z
     // mstore(AGGREGATED_OPENING_AT_Z_SLOT, aggregatedOpeningAtZ)
@@ -1398,41 +847,15 @@ fn prepare_aggregated_commitment(
 
     aggregation_challenge = aggregation_challenge.mul(state_v_slot);
 
-    let state_u = Fr::from_str(
-        "1288818797502384203299534503559211197379962355037926217584736460242183741135",
-    )
-    .unwrap();
+    let state_u = pvs.u;
 
     let copy_permutation_coeff = aggregation_challenge
         .mul(state_u)
         .add(copy_permutation_first_aggregated_commitment_coeff);
 
+    let proof_copy_permutation_grand_product_affine = proof.copy_permutation_grand_product;
 
-
-    // proof component
-    let proof_copy_permutation_grand_product_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "10682973389427934500889390913980545461720540728378117423453967866054801517546",
-    )
-    .unwrap();
-
-    let proof_copy_permutation_grand_product_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "19640862922252046012593809239563773424382616310643479928760400654556187984808",
-    )
-    .unwrap();
-
-    let proof_copy_permutation_grand_product_affine = G1Projective::new(
-        proof_copy_permutation_grand_product_x,
-        proof_copy_permutation_grand_product_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-
-
-    let proof_copy_permutation_grand_product_opening_at_z_omega = Fr::from_str(
-        "7538059542152278064360430275006244865024464052241262187047297399810715308295",
-    )
-    .unwrap();
+    let proof_copy_permutation_grand_product_opening_at_z_omega = proof.copy_permutation_grand_product_opening_at_z_omega;
 
     let mut aggregated_z_omega = proof_copy_permutation_grand_product_affine
         .mul(copy_permutation_coeff)
@@ -1452,27 +875,9 @@ fn prepare_aggregated_commitment(
         aggregated_opening_z_omega.to_string()
     );
 
-    let proof_state_polys_3_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "7648216166271091756697000850759109818942352153393449549967097850294823322486",
-    )
-    .unwrap();
+    let proof_state_polys_3 = proof.state_poly_3;
 
-    let proof_state_polys_3_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "13841059918140042479305358189720506803328611470904137853333589893028890921956",
-    )
-    .unwrap();
-
-    let proof_state_polys_3 = G1Projective::new(
-        proof_state_polys_3_x,
-        proof_state_polys_3_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let proof_state_polys_3_opening_at_z_omega_slot = Fr::from_str(
-        "15977681115418510430689616723041331137718448474191693270665710012377948663376",
-    )
-    .unwrap();
+    let proof_state_polys_3_opening_at_z_omega_slot = proof.state_poly_3_opening_at_z_omega;
 
     fn update_aggregation_challenge_second(
         queries_commitment_pt: GroupAffine<Parameters>,
@@ -1515,47 +920,20 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_z_omega = update_agg_challenge.2;
 
-    println!("Aggregated at z omega 1 {:?}", aggregated_z_omega.x.to_string());
-    println!("Aggregation Challenge 1 {:?}", aggregation_challenge.to_string());
+    println!(
+        "Aggregated at z omega 1 {:?}",
+        aggregated_z_omega.x.to_string()
+    );
+    println!(
+        "Aggregation Challenge 1 {:?}",
+        aggregation_challenge.to_string()
+    );
 
-    let proof_lookup_s_poly_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "20887469144570360598226846219688412569127314117060464745189593667525340515656",
-    )
-    .unwrap();
+    let proof_lookup_s_poly = proof.lookup_s_poly;
 
-    let proof_lookup_s_poly_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "17016442743265291319847312885025674149359385754888666855828695845548134601930",
-    )
-    .unwrap();
+    let proof_lookup_s_poly_opening_at_z_omega = proof.lookup_s_poly_opening_at_z_omega;
 
-    let proof_lookup_s_poly = G1Projective::new(
-        proof_lookup_s_poly_x,
-        proof_lookup_s_poly_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
-
-    let proof_lookup_s_poly_opening_at_z_omega = Fr::from_str(
-        "7036240067875131759268503442624403515627271384033836780470587737696909190933",
-    )
-    .unwrap();
-
-    let proof_lookup_grand_product_x = <G1Point as AffineCurve>::BaseField::from_str(
-        "9589178903221618453208009241401184562093337063441620358881756562676120576984",
-    )
-    .unwrap();
-
-    let proof_lookup_grand_product_y = <G1Point as AffineCurve>::BaseField::from_str(
-        "13587607855302777394786571902811537225748207835844766425168460163223723298480",
-    )
-    .unwrap();
-
-    let proof_lookup_grand_product_affine = G1Projective::new(
-        proof_lookup_grand_product_x,
-        proof_lookup_grand_product_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
+    let proof_lookup_grand_product_affine = proof.lookup_grand_product;
 
     update_agg_challenge = update_aggregation_challenge_second(
         proof_lookup_s_poly,
@@ -1572,18 +950,18 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_z_omega = update_agg_challenge.2;
 
-    println!("Aggregated at z omega 2 {:?}", aggregated_z_omega.x.to_string());
-    println!("Aggregation Challenge 2 {:?}", aggregation_challenge.to_string());
+    println!(
+        "Aggregated at z omega 2 {:?}",
+        aggregated_z_omega.x.to_string()
+    );
+    println!(
+        "Aggregation Challenge 2 {:?}",
+        aggregation_challenge.to_string()
+    );
 
-    let proof_lookup_grand_product_opening_at_z_omega = Fr::from_str(
-        "15834657814168463130145202123584569486416145351650914790360391211128804599867",
-    )
-    .unwrap();
+    let proof_lookup_grand_product_opening_at_z_omega = proof.lookup_grand_product_opening_at_z_omega;
 
-    let proof_lookup_t_poly_opening_at_z_omega = Fr::from_str(
-        "1526611985826438991010848350624117895374304477623813636492366499941649169423",
-    )
-    .unwrap();
+    let proof_lookup_t_poly_opening_at_z_omega = proof.lookup_t_poly_opening_at_z_omega;
 
     update_agg_challenge = update_aggregation_challenge_second(
         proof_lookup_grand_product_affine,
@@ -1600,10 +978,19 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_z_omega = update_agg_challenge.2;
 
-    println!("kdfghfgh {:?}", lookup_grand_product_first_aggregated_commitment_coeff.to_string());
+    println!(
+        "kdfghfgh {:?}",
+        lookup_grand_product_first_aggregated_commitment_coeff.to_string()
+    );
 
-    println!("Aggregated at z omega 3 {:?}", aggregated_z_omega.x.to_string());
-    println!("Aggregation Challenge 3 {:?}", aggregation_challenge.to_string());
+    println!(
+        "Aggregated at z omega 3 {:?}",
+        aggregated_z_omega.x.to_string()
+    );
+    println!(
+        "Aggregation Challenge 3 {:?}",
+        aggregation_challenge.to_string()
+    );
 
     update_agg_challenge = update_aggregation_challenge_second(
         queries_t_poly_aggregated,
@@ -1620,8 +1007,14 @@ fn prepare_aggregated_commitment(
     aggregation_challenge = update_agg_challenge.0;
     aggregated_opening_z_omega = update_agg_challenge.2;
 
-    println!("Aggregated at z omega 4 {:?}", aggregated_z_omega.x.to_string());
-    println!("Aggregation Challenge 4 {:?}", aggregation_challenge.to_string());
+    println!(
+        "Aggregated at z omega 4 {:?}",
+        aggregated_z_omega.x.to_string()
+    );
+    println!(
+        "Aggregation Challenge 4 {:?}",
+        aggregation_challenge.to_string()
+    );
 
     // store aggregated_opening_z_omega somewhere and return it as it might be used somewhere else
 
@@ -1656,18 +1049,6 @@ fn prepare_aggregated_commitment(
     // pointMulIntoDest(PAIRING_BUFFER_POINT_X_SLOT, aggregatedValue, PAIRING_BUFFER_POINT_X_SLOT)
 }
 
-// PROOF_QUOTIENT_POLY_OPENING_AT_Z_SLOT_term
-// PROOF_LINEARISATION_POLY_OPENING_AT_Z_SLOT_term
-// PROOF_STATE_POLYS_0_X_SLOT
-// PROOF_STATE_POLYS_1_X_SLOT
-// PROOF_STATE_POLYS_2_X_SLOT
-
-// }
-
-// PROOF_QUOTIENT_POLY_PARTS_1_X_SLOT_term
-// QUERIES_AT_Z_0_X_SLOT_term
-// QUERIES_AT_Z_0_X_SLOT_y_term
-
 pub struct Transcript {
     // uint256 constant FR_MASK = 0x1fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
@@ -1683,16 +1064,16 @@ pub struct Transcript {
     DST_CHALLENGE: u32,
 }
 
-
-
-
 impl Transcript {
     fn new_transcript() -> Self {
         Transcript {
-            state_0: [0; 32], // Initializes state_0 with 32 bytes of zeros
-            state_1: [0; 32], // Initializes state_1 with 32 bytes of zeros
+            state_0: [0; 32],     // Initializes state_0 with 32 bytes of zeros
+            state_1: [0; 32],     // Initializes state_1 with 32 bytes of zeros
             challenge_counter: 0, // Initializes challenge_counter to 0
-            FR_MASK: Fr::from_str("14474011154664524427946373126085988481658748083205070504932198000989141204991").unwrap(),
+            FR_MASK: Fr::from_str(
+                "14474011154664524427946373126085988481658748083205070504932198000989141204991",
+            )
+            .unwrap(),
             DST_0: 0,
             DST_1: 1,
             DST_CHALLENGE: 2,
@@ -1712,7 +1093,7 @@ impl Transcript {
         // Update the transcript with DST_0 and the value, then hash it for newState0
         let val_beg = padd_bytes3(0u8.to_be_bytes().to_vec());
         // println!("val_beg: {:?}", val_beg);
-        let val_dst = (dst_0.to_be_bytes().to_vec()); 
+        let val_dst = (dst_0.to_be_bytes().to_vec());
         // println!("val_dst: {:?}", val_dst);
         let val_s0 = padd_bytes32(self.state_0.to_vec());
         // println!("val_s0: {:?}", val_s0);
@@ -1720,7 +1101,7 @@ impl Transcript {
         // println!("val_s1: {:?}", val_s1);
         let val_chall = padd_bytes32(value.to_vec());
         // println!("val_chall: {:?}", val_chall);
-        
+
         let mut concatenated = Vec::new();
         concatenated.extend_from_slice(&val_beg);
         concatenated.extend_from_slice(&val_dst);
@@ -1742,10 +1123,10 @@ impl Transcript {
         // let newState1 = Keccak256::digest(&transcript);
 
         transcript = Keccak::v256();
-        
+
         let val_beg = padd_bytes3(0u8.to_be_bytes().to_vec());
         // println!("2 val_beg: {:?}", val_beg);
-        let val_dst1 = (dst_1.to_be_bytes().to_vec()); 
+        let val_dst1 = (dst_1.to_be_bytes().to_vec());
         // println!("2 val_dst1: {:?}", val_dst1);
         let val_s0 = padd_bytes32(self.state_0.to_vec());
         // println!("2 val_s0: {:?}", val_s0);
@@ -1773,12 +1154,9 @@ impl Transcript {
         self.state_1.copy_from_slice(&newState1);
     }
 
-
     pub fn get_transcript_challenge(&mut self, number_of_challenge: u32) -> [u8; 32] {
-
         let mut transcript = Keccak::v256();
 
-        
         let val_beg = padd_bytes3(0u8.to_be_bytes().to_vec());
         let val_dst2 = 2u8.to_be_bytes().to_vec();
         let val_s0 = self.state_0.to_vec();
@@ -1790,7 +1168,6 @@ impl Transcript {
 
         // println!("final_val_chall: {:?}", final_val_chall);
 
-
         let mut concatenated = Vec::new();
         concatenated.extend_from_slice(&val_beg);
         concatenated.extend_from_slice(&val_dst2);
@@ -1799,20 +1176,17 @@ impl Transcript {
         concatenated.extend_from_slice(&final_val_chall);
         transcript.update(&concatenated);
 
-
         let mut out = [0u8; 32];
         transcript.finalize(&mut out);
         // let res = out;
         let res = BigInt::from_bytes_be(Sign::Plus, &out);
         // println!("res: {:?}", res);
 
-
         const FR_MASK: [u8; 32] = [
-    0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-];
+            0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff,
+        ];
         let mut res_fr = [0u8; 32];
 
         for i in 0..32 {
@@ -1825,15 +1199,17 @@ impl Transcript {
     }
 }
 
-pub fn getPublicInputs() -> Fp256<FrParameters>{
+pub fn getPublicInputs() -> Fp256<FrParameters> {
     let ttt = get_fr_mask().into_repr().0[0] & get_fr_mask().into_repr().0[1];
-    let pi = Fr::from_str("7930533175376274174682760122775727104792125867965765072731098693082").unwrap();
+    let pi = Fr::from_str("7930533175376274174682760122775727104792125867965765072731098693082")
+        .unwrap();
     let mut res = apply_fr_mask(padd_bytes32(get_u8arr_from_fr(pi)));
     get_fr_from_u8arr(res)
 }
 
-pub fn get_fr_mask() -> Fp256<FrParameters>{
-    Fr::from_str("14474011154664524427946373126085988481658748083205070504932198000989141204991").unwrap()
+pub fn get_fr_mask() -> Fp256<FrParameters> {
+    Fr::from_str("14474011154664524427946373126085988481658748083205070504932198000989141204991")
+        .unwrap()
 }
 
 pub fn getDomainSize() -> u64 {
@@ -1841,25 +1217,27 @@ pub fn getDomainSize() -> u64 {
 }
 
 pub fn getScalarField() -> Fp256<FrParameters> {
-    Fr::from_str("21888242871839275222246405745257275088548364400416034343698204186575808495617").unwrap()
+    Fr::from_str("21888242871839275222246405745257275088548364400416034343698204186575808495617")
+        .unwrap()
 }
-
-// pub fn inittializeTranscript() {
-//     let mut transcript = Transcript::new_transcript();
-//     update_with_u256(&mut transcript, getPublicInputs())
-// }
 
 pub fn getOmega() -> Fp256<FrParameters> {
-    Fr::from_str("11451405578697956743456240853980216273390554734748796433026540431386972584651").unwrap()
+    Fr::from_str("11451405578697956743456240853980216273390554734748796433026540431386972584651")
+        .unwrap()
 }
 
-pub fn evaluateLagrangePolyOutOfDomain(polyNum: u64 ,at: Fp256<FrParameters>) -> Fp256<FrParameters>{
+pub fn evaluateLagrangePolyOutOfDomain(
+    polyNum: u64,
+    at: Fp256<FrParameters>,
+) -> Fp256<FrParameters> {
     let mut omegaPower = Fr::from_str("1").unwrap();
     if polyNum > 0 {
         omegaPower = getOmega().pow(&[polyNum as u64]);
     }
     println!("omegaPower: {}", omegaPower);
-    let mut res = at.pow(&[getDomainSize()]).add(getScalarField().sub(Fr::from_str("1").unwrap()));
+    let mut res = at
+        .pow(&[getDomainSize()])
+        .add(getScalarField().sub(Fr::from_str("1").unwrap()));
     assert_ne!(res, Fp256::zero());
 
     res = res.mul(omegaPower);
@@ -1867,7 +1245,6 @@ pub fn evaluateLagrangePolyOutOfDomain(polyNum: u64 ,at: Fp256<FrParameters>) ->
 
     let mut denominator = at.add(getScalarField().sub((Fr::from(omegaPower))));
     denominator = denominator.mul(Fr::from(getDomainSize()));
-    
 
     // let mut q_mius_2 = BigInt::from_str(&getScalarField().sub(Fr::from_str("2").unwrap()).to_string()).unwrap();
     denominator = denominator.inverse().unwrap();
@@ -1875,38 +1252,44 @@ pub fn evaluateLagrangePolyOutOfDomain(polyNum: u64 ,at: Fp256<FrParameters>) ->
     res = res.mul(denominator);
     // println!("res: {}", res);
     res
-
-
 }
 
-
-pub fn permutationQuotientContribution(pvs: &mut PartialVerifierState, l0AtZ: Fp256<FrParameters>) -> Fp256<FrParameters>{
-    let mut res = pvs.power_of_alpha_4.mul(get_proof().copy_permutation_grand_product_opening_at_z_omega);
+pub fn permutationQuotientContribution(
+    pvs: &mut PartialVerifierState,
+    l0AtZ: Fp256<FrParameters>,
+) -> Fp256<FrParameters> {
+    let mut res = pvs
+        .power_of_alpha_4
+        .mul(get_proof().copy_permutation_grand_product_opening_at_z_omega);
     let mut factorMultiplier;
 
-    factorMultiplier = get_proof().copy_permutation_polys_0_opening_at_z.mul(pvs.beta);
+    factorMultiplier = get_proof()
+        .copy_permutation_polys_0_opening_at_z
+        .mul(pvs.beta);
     // println!("factorMultiplier: {}", factorMultiplier);
     factorMultiplier = factorMultiplier.add(pvs.gamma);
     factorMultiplier = factorMultiplier.add(get_proof().state_poly_0_opening_at_z);
     res = res.mul(factorMultiplier);
 
     // println!("res: {}", res);
-    factorMultiplier = get_proof().copy_permutation_polys_1_opening_at_z.mul(pvs.beta);
+    factorMultiplier = get_proof()
+        .copy_permutation_polys_1_opening_at_z
+        .mul(pvs.beta);
     factorMultiplier = factorMultiplier.add(pvs.gamma);
     factorMultiplier = factorMultiplier.add(get_proof().state_poly_1_opening_at_z);
     res = res.mul(factorMultiplier);
 
-    factorMultiplier = get_proof().copy_permutation_polys_2_opening_at_z.mul(pvs.beta);
+    factorMultiplier = get_proof()
+        .copy_permutation_polys_2_opening_at_z
+        .mul(pvs.beta);
     factorMultiplier = factorMultiplier.add(pvs.gamma);
     factorMultiplier = factorMultiplier.add(get_proof().state_poly_2_opening_at_z);
     res = res.mul(factorMultiplier);
-
 
     // println!("get_proof().state_poly_3_opening_at_z_omega: {}", get_bigint_from_fr(get_proof().state_poly_3_opening_at_z_omega));
     res = res.mul(get_proof().state_poly_3_opening_at_z.add(pvs.gamma));
 
     // println!("res: {}", get_bigint_from_fr(res));
-
 
     res = getScalarField().sub(res);
 
@@ -1920,39 +1303,38 @@ pub fn permutationQuotientContribution(pvs: &mut PartialVerifierState, l0AtZ: Fp
     res
 }
 
-
-pub fn lookupQuotientContribution(pvs: &mut PartialVerifierState) -> Fp256<FrParameters>{
-
+pub fn lookupQuotientContribution(pvs: &mut PartialVerifierState) -> Fp256<FrParameters> {
     let betaplusone = pvs.beta_lookup.add(Fr::from_str("1").unwrap());
     let betaGamma = betaplusone.mul(pvs.gamma_lookup);
 
-    let mut res = get_proof().lookup_s_poly_opening_at_z_omega.mul(pvs.beta_lookup);
+    pvs.beta_gamma_plus_gamma = betaGamma;
+
+    let mut res = get_proof()
+        .lookup_s_poly_opening_at_z_omega
+        .mul(pvs.beta_lookup);
     res = res.add(betaGamma);
     res = res.mul(get_proof().lookup_grand_product_opening_at_z_omega);
     res = res.mul(pvs.power_of_alpha_6);
 
     // println!("res: {}", get_bigint_from_fr(res));
-    let mut lastOmega = getOmega().pow([getDomainSize()-1]);
+    let mut lastOmega = getOmega().pow([getDomainSize() - 1]);
     println!("lastOmega: {}", get_bigint_from_fr(lastOmega));
     let zMinusLastOmega = pvs.z.add(lastOmega.neg());
     res = res.mul(zMinusLastOmega);
-    
 
     let intermediateValue = pvs.l_0_at_z.mul(pvs.power_of_alpha_7);
     res = res.add(intermediateValue.neg());
 
-    let betaGammaPowered = betaGamma.pow([getDomainSize()-1]);
-    let subtrahend = pvs.power_of_alpha_8.mul(pvs.l_n_minus_one_at_z.mul(betaGammaPowered));
+    let betaGammaPowered = betaGamma.pow([getDomainSize() - 1]);
+    let subtrahend = pvs
+        .power_of_alpha_8
+        .mul(pvs.l_n_minus_one_at_z.mul(betaGammaPowered));
     res = res.add(subtrahend.neg());
     println!("res: {}", get_bigint_from_fr(res));
     res
-
-
-
 }
 
-pub fn verifyQuotientEvaluation(mut pvs: PartialVerifierState) {
-
+pub fn verifyQuotientEvaluation(pvs: &mut PartialVerifierState) {
     let alpha_2 = pvs.alpha.mul(pvs.alpha);
     let alpha_3 = pvs.power_of_alpha_3;
     let alpha_4 = pvs.power_of_alpha_4;
@@ -1961,12 +1343,13 @@ pub fn verifyQuotientEvaluation(mut pvs: PartialVerifierState) {
     let alpha_7 = pvs.power_of_alpha_7;
     let alpha_8 = pvs.power_of_alpha_8;
 
+    let l0atz = evaluateLagrangePolyOutOfDomain(0, pvs.z);
 
-    let l0atz= evaluateLagrangePolyOutOfDomain(0, pvs.z);
+    let lnmius1atZ = evaluateLagrangePolyOutOfDomain(getDomainSize() - 1, pvs.z);
 
-    let lnmius1atZ = evaluateLagrangePolyOutOfDomain(getDomainSize()-1, pvs.z);
 
     pvs.l_0_at_z = l0atz;
+    println!("l0atz: kljt gfhgldfhgdflhdfgkl dfghdfghkldf {}", get_bigint_from_fr(pvs.l_0_at_z));
     pvs.l_n_minus_one_at_z = lnmius1atZ;
 
     // let mut pvs = PartialVerifierState{
@@ -1985,7 +1368,7 @@ pub fn verifyQuotientEvaluation(mut pvs: PartialVerifierState) {
     //     gamma_lookup: Fr::from_str("10143450367578341384865650570084054672128122620763568488049428709968718700978").unwrap(),
     //     beta_plus_one: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
     //     beta_gamma_plus_gamma: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
-    //     v: Fr::from_str("13330004428861975879381254388579709216101551406414154978351365682885384794150").unwrap(), 
+    //     v: Fr::from_str("13330004428861975879381254388579709216101551406414154978351365682885384794150").unwrap(),
     //     u: Fr::from_str("1288818797502384203299534503559211197379962355037926217584736460242183741135").unwrap(),
     //     z: Fr::from_str("2401351998492944598364033620572509016859399460686508186648075303585158829617").unwrap(),
     //     z_minus_last_omega: Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap(),
@@ -1995,17 +1378,15 @@ pub fn verifyQuotientEvaluation(mut pvs: PartialVerifierState) {
 
     // };
 
-
     let stateT = l0atz.mul(getPublicInputs());
     // println!("stateT: {}", get_bigint_from_fr(stateT));
 
     let mut result = stateT.mul(get_proof().gate_selectors_0_opening_at_z);
-    
 
-    result = result.add(permutationQuotientContribution(&mut pvs, l0atz));
+    result = result.add(permutationQuotientContribution(pvs, l0atz));
     // println!("result: {}", get_bigint_from_fr(result));
 
-    result = result.add(lookupQuotientContribution(&mut pvs));
+    result = result.add(lookupQuotientContribution(pvs));
 
     result = result.add(get_proof().linearisation_poly_opening_at_z);
 
@@ -2013,12 +1394,10 @@ pub fn verifyQuotientEvaluation(mut pvs: PartialVerifierState) {
 
     let vanishing = pvs.z_in_domain_size.add(Fr::from_str("1").unwrap().neg());
 
-    
     let lhs = get_proof().quotient_poly_opening_at_z.mul(vanishing);
-   
+
     assert_eq!(lhs, result);
 }
-
 
 pub fn get_challenges(pvs: &mut PartialVerifierState) {
     let mut transcript = Transcript::new_transcript();
@@ -2035,7 +1414,7 @@ pub fn get_challenges(pvs: &mut PartialVerifierState) {
 
     let etaaa = transcript.get_transcript_challenge(0);
     println!("etaaa: {}", BigInt::from_bytes_be(Sign::Plus, &etaaa));
-    
+
     //round 1.5
     transcript.update_transcript(&get_u8arr_from_fq(get_proof().lookup_s_poly.x));
     transcript.update_transcript(&get_u8arr_from_fq(get_proof().lookup_s_poly.y));
@@ -2047,13 +1426,23 @@ pub fn get_challenges(pvs: &mut PartialVerifierState) {
 
     //round 2
 
-    transcript.update_transcript(&get_u8arr_from_fq(get_proof().copy_permutation_grand_product.x));
-    transcript.update_transcript(&get_u8arr_from_fq(get_proof().copy_permutation_grand_product.y));
+    transcript.update_transcript(&get_u8arr_from_fq(
+        get_proof().copy_permutation_grand_product.x,
+    ));
+    transcript.update_transcript(&get_u8arr_from_fq(
+        get_proof().copy_permutation_grand_product.y,
+    ));
 
     let beta_lookuppp = transcript.get_transcript_challenge(3);
     let gamma_lookuppp = transcript.get_transcript_challenge(4);
-    println!("beta_lookuppp: {}", BigInt::from_bytes_be(Sign::Plus, &beta_lookuppp));
-    println!("gamma_lookuppp: {}", BigInt::from_bytes_be(Sign::Plus, &gamma_lookuppp));
+    println!(
+        "beta_lookuppp: {}",
+        BigInt::from_bytes_be(Sign::Plus, &beta_lookuppp)
+    );
+    println!(
+        "gamma_lookuppp: {}",
+        BigInt::from_bytes_be(Sign::Plus, &gamma_lookuppp)
+    );
 
     //round 2.5
 
@@ -2062,7 +1451,6 @@ pub fn get_challenges(pvs: &mut PartialVerifierState) {
 
     let alphaaa = transcript.get_transcript_challenge(5);
     println!("alphaaa: {}", BigInt::from_bytes_be(Sign::Plus, &alphaaa));
-
 
     //round 3
 
@@ -2078,8 +1466,10 @@ pub fn get_challenges(pvs: &mut PartialVerifierState) {
     let zz = transcript.get_transcript_challenge(6);
     let zz_in_domain_size = get_fr_from_u8arr(zz.to_vec()).pow([getDomainSize()]);
     println!("zz: {}", BigInt::from_bytes_be(Sign::Plus, &zz));
-    println!("zz_in_domain_size: {}", get_bigint_from_fr(zz_in_domain_size));
-
+    println!(
+        "zz_in_domain_size: {}",
+        get_bigint_from_fr(zz_in_domain_size)
+    );
 
     //round 4
 
@@ -2090,26 +1480,49 @@ pub fn get_challenges(pvs: &mut PartialVerifierState) {
     transcript.update_transcript(&get_u8arr_from_fr(get_proof().state_poly_2_opening_at_z));
     transcript.update_transcript(&get_u8arr_from_fr(get_proof().state_poly_3_opening_at_z));
 
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().state_poly_3_opening_at_z_omega));
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().gate_selectors_0_opening_at_z));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().state_poly_3_opening_at_z_omega,
+    ));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().gate_selectors_0_opening_at_z,
+    ));
 
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().copy_permutation_polys_0_opening_at_z));
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().copy_permutation_polys_1_opening_at_z));
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().copy_permutation_polys_2_opening_at_z));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().copy_permutation_polys_0_opening_at_z,
+    ));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().copy_permutation_polys_1_opening_at_z,
+    ));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().copy_permutation_polys_2_opening_at_z,
+    ));
 
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().copy_permutation_grand_product_opening_at_z_omega));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().copy_permutation_grand_product_opening_at_z_omega,
+    ));
     transcript.update_transcript(&get_u8arr_from_fr(get_proof().lookup_t_poly_opening_at_z));
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().lookup_selector_poly_opening_at_z));
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().lookup_table_type_poly_opening_at_z));
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().lookup_s_poly_opening_at_z_omega));
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().lookup_grand_product_opening_at_z_omega));
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().lookup_t_poly_opening_at_z_omega));
-    transcript.update_transcript(&get_u8arr_from_fr(get_proof().linearisation_poly_opening_at_z));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().lookup_selector_poly_opening_at_z,
+    ));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().lookup_table_type_poly_opening_at_z,
+    ));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().lookup_s_poly_opening_at_z_omega,
+    ));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().lookup_grand_product_opening_at_z_omega,
+    ));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().lookup_t_poly_opening_at_z_omega,
+    ));
+    transcript.update_transcript(&get_u8arr_from_fr(
+        get_proof().linearisation_poly_opening_at_z,
+    ));
 
     let vv = transcript.get_transcript_challenge(7);
 
     println!("vv: {}", BigInt::from_bytes_be(Sign::Plus, &vv));
-
 
     // round 5
 
@@ -2121,7 +1534,7 @@ pub fn get_challenges(pvs: &mut PartialVerifierState) {
     let uu = transcript.get_transcript_challenge(8);
     println!("uu: {}", BigInt::from_bytes_be(Sign::Plus, &uu));
 
-    let power_of_alpha_1 =  get_fr_from_u8arr(alphaaa.to_vec());
+    let power_of_alpha_1 = get_fr_from_u8arr(alphaaa.to_vec());
     let power_of_alpha_2 = power_of_alpha_1.mul(power_of_alpha_1);
     let power_of_alpha_3 = power_of_alpha_2.mul(power_of_alpha_1);
     let power_of_alpha_4 = power_of_alpha_3.mul(power_of_alpha_1);
@@ -2143,40 +1556,22 @@ pub fn get_challenges(pvs: &mut PartialVerifierState) {
     pvs.eta = get_fr_from_u8arr(etaaa.to_vec());
     pvs.beta_lookup = get_fr_from_u8arr(beta_lookuppp.to_vec());
     pvs.gamma_lookup = get_fr_from_u8arr(gamma_lookuppp.to_vec());
-    pvs.beta_plus_one = pvs.beta.add(Fr::from_str("1").unwrap());
-    pvs.beta_gamma_plus_gamma = pvs.beta.mul(pvs.gamma).add(pvs.gamma);
+    pvs.beta_plus_one = pvs.beta_lookup.add(Fr::from_str("1").unwrap());
+    pvs.beta_gamma_plus_gamma = pvs.beta_lookup.add(Fr::from_str("1").unwrap()).mul(pvs.gamma_lookup);
     pvs.v = get_fr_from_u8arr(vv.to_vec());
     pvs.u = get_fr_from_u8arr(uu.to_vec());
     pvs.z = get_fr_from_u8arr(zz.to_vec());
-    pvs.z_minus_last_omega = pvs.z.add(getOmega().pow([getDomainSize()-1]).neg());
+    pvs.z_minus_last_omega = pvs.z.add(getOmega().pow([getDomainSize() - 1]).neg());
     pvs.z_in_domain_size = zz_in_domain_size;
-
 }
-
-pub fn verify(){
-
-    let alpha = Fr::from_str("2283206971795773822103810506163842486205626492327489207776386690517719211772").unwrap();
-    
-    let z = Fr::from_str("2401351998492944598364033620572509016859399460686508186648075303585158829617").unwrap();
-    println!("Verifying....");
-
-    let mut pvs = PartialVerifierState::new();
-    get_challenges(&mut pvs);
-    verifyQuotientEvaluation(pvs);
-    println!("Verified....");
-
-}
-
-
-// pub fn get_proof() -> Proof{
-
-
-// }
 
 pub fn get_u8arr_from_fq(fq: Fp256<FqParameters>) -> Vec<u8> {
     let mut st = fq.to_string();
-    let temp = &st[8..8+64];
-    BigInt::parse_bytes(temp.as_bytes(), 16).unwrap().to_bytes_be().1
+    let temp = &st[8..8 + 64];
+    BigInt::parse_bytes(temp.as_bytes(), 16)
+        .unwrap()
+        .to_bytes_be()
+        .1
 }
 
 pub fn get_u8arr_from_fr(fr: Fp256<FrParameters>) -> Vec<u8> {
@@ -2190,10 +1585,9 @@ pub fn get_fr_from_u8arr(arr: Vec<u8>) -> Fp256<FrParameters> {
 
 pub fn get_bigint_from_fr(fr: Fp256<FrParameters>) -> BigInt {
     let mut st = fr.to_string();
-    let temp = &st[8..8+64];
+    let temp = &st[8..8 + 64];
     BigInt::parse_bytes(temp.as_bytes(), 16).unwrap()
 }
-
 
 pub fn padd_bytes32(input: Vec<u8>) -> Vec<u8> {
     let mut result = input.clone();
@@ -2203,7 +1597,6 @@ pub fn padd_bytes32(input: Vec<u8>) -> Vec<u8> {
     padding
 }
 
-
 pub fn padd_bytes3(input: Vec<u8>) -> Vec<u8> {
     let mut result = input.clone();
     let mut padding = vec![0; 3 - input.len()];
@@ -2212,18 +1605,17 @@ pub fn padd_bytes3(input: Vec<u8>) -> Vec<u8> {
     padding
 }
 
-pub fn apply_fr_mask(out: Vec<u8>) -> Vec<u8>{
+pub fn apply_fr_mask(out: Vec<u8>) -> Vec<u8> {
     const FR_MASK: [u8; 32] = [
-    0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-];
-        let mut res_fr = [0u8; 32];
+        0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff,
+    ];
+    let mut res_fr = [0u8; 32];
 
-        for i in 0..32 {
-            res_fr[i] = out[i] & FR_MASK[i];
-        }
+    for i in 0..32 {
+        res_fr[i] = out[i] & FR_MASK[i];
+    }
 
-        res_fr.to_vec()
+    res_fr.to_vec()
 }

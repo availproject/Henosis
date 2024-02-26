@@ -13,7 +13,6 @@ use std::str::FromStr;
 pub type G1Point = <Bn254 as PairingEngine>::G1Affine;
 pub type G2Point = <Bn254 as PairingEngine>::G2Affine;
 //  // Proof calldata
-
 pub struct ProofBigInt {
     pub c1: (BigInt, BigInt),
     pub c2: (BigInt, BigInt),
@@ -456,6 +455,7 @@ pub fn get_proof() -> Proof {
 }
 
 //Partial verifier state
+#[derive(Debug, Clone)]
 pub struct PartialVerifierState {
    
     pub alpha: Fp256<FrParameters>,
