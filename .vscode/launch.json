@@ -1,0 +1,437 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'groth16_aggregator'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=groth16_aggregator"
+                ],
+                "filter": {
+                    "name": "groth16_aggregator",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'converter'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=converter"
+                ],
+                "filter": {
+                    "name": "converter",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'converter'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=converter",
+                    "--package=converter"
+                ],
+                "filter": {
+                    "name": "converter",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'converter'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=converter",
+                    "--package=converter"
+                ],
+                "filter": {
+                    "name": "converter",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'fflonk_verifier'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=fflonk_verifier"
+                ],
+                "filter": {
+                    "name": "fflonk_verifier",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'fflonk_verifier'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=fflonk_verifier",
+                    "--package=fflonk_verifier"
+                ],
+                "filter": {
+                    "name": "fflonk_verifier",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'fflonk_verifier'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=fflonk_verifier",
+                    "--package=fflonk_verifier"
+                ],
+                "filter": {
+                    "name": "fflonk_verifier",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'simple_verification'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=simple_verification",
+                    "--package=fflonk_verifier"
+                ],
+                "filter": {
+                    "name": "simple_verification",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'simple_verification'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=simple_verification",
+                    "--package=fflonk_verifier"
+                ],
+                "filter": {
+                    "name": "simple_verification",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'methods'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=methods"
+                ],
+                "filter": {
+                    "name": "methods",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'plonk_verifier'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=plonk_verifier"
+                ],
+                "filter": {
+                    "name": "plonk_verifier",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'plonk_verifier'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=plonk_verifier",
+                    "--package=plonk_verifier"
+                ],
+                "filter": {
+                    "name": "plonk_verifier",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'plonk_verifier'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=plonk_verifier",
+                    "--package=plonk_verifier"
+                ],
+                "filter": {
+                    "name": "plonk_verifier",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'simple_verification'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=simple_verification",
+                    "--package=plonk_verifier"
+                ],
+                "filter": {
+                    "name": "simple_verification",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'simple_verification'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=simple_verification",
+                    "--package=plonk_verifier"
+                ],
+                "filter": {
+                    "name": "simple_verification",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'henosis'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=henosis"
+                ],
+                "filter": {
+                    "name": "henosis",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'henosis'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=henosis",
+                    "--package=henosis"
+                ],
+                "filter": {
+                    "name": "henosis",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'henosis'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=henosis",
+                    "--package=henosis"
+                ],
+                "filter": {
+                    "name": "henosis",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'zksync_verifier'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=zksync_verifier"
+                ],
+                "filter": {
+                    "name": "zksync_verifier",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'zksync_verifier'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=zksync_verifier",
+                    "--package=zksync_verifier"
+                ],
+                "filter": {
+                    "name": "zksync_verifier",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'zksync_verifier'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=zksync_verifier",
+                    "--package=zksync_verifier"
+                ],
+                "filter": {
+                    "name": "zksync_verifier",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'simple_verification'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=simple_verification",
+                    "--package=zksync_verifier"
+                ],
+                "filter": {
+                    "name": "simple_verification",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'simple_verification'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=simple_verification",
+                    "--package=zksync_verifier"
+                ],
+                "filter": {
+                    "name": "simple_verification",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
