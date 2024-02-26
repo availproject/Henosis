@@ -183,28 +183,11 @@ impl Transcript {
     }
 }
 
-
-
-pub fn updateTranscript() {
-    
-}
-
-
-pub fn getTransciptChallenge() {
-
-}
-
 pub fn getPublicInputs() -> Fp256<FrParameters>{
     let ttt = get_fr_mask().into_repr().0[0] & get_fr_mask().into_repr().0[1];
-    let pi = Fr::from_str("1481927715054811733804695304084001679108833716381348939730805268145753672319").unwrap();
-    let mut res = [0u64; 4];
-    for i in 0..4{
-        res[i] = get_fr_mask().into_repr().0[i] & pi.into_repr().0[i];
-    }
-    let final_val: Fp256<FrParameters> = Fp256::from_repr(ark_ff::BigInteger256(res)).unwrap();
-    // println!("ttt: {}", ttt);
-    println!("final_val: {}", get_bigint_from_fr(final_val));
-    Fr::from_str("7930533175376274174682760122775727104792125867965765072731098693082").unwrap()
+    let pi = Fr::from_str("7930533175376274174682760122775727104792125867965765072731098693082").unwrap();
+    let mut res = apply_fr_mask(padd_bytes32(get_u8arr_from_fr(pi)));
+    get_fr_from_u8arr(res)
 }
 
 pub fn get_fr_mask() -> Fp256<FrParameters>{
@@ -585,4 +568,20 @@ pub fn padd_bytes3(input: Vec<u8>) -> Vec<u8> {
     padding.append(&mut result);
     // result.append(&mut padding);
     padding
+}
+
+pub fn apply_fr_mask(out: Vec<u8>) -> Vec<u8>{
+    const FR_MASK: [u8; 32] = [
+    0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+];
+        let mut res_fr = [0u8; 32];
+
+        for i in 0..32 {
+            res_fr[i] = out[i] & FR_MASK[i];
+        }
+
+        res_fr.to_vec()
 }
