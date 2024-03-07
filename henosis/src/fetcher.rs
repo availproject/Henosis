@@ -1,24 +1,26 @@
 use ark_bn254::{Fr, FrParameters};
+use converter::converter::converter_fflonk_to_groth16;
 use ethabi::{ParamType, Token};
 use ethers::contract::{abigen, Contract};
 use ethers::prelude::*;
 use ethers::utils::hex;
+use fflonk_verifier::utils::{construct_proof, ProofWithPubSignal};
 use num_bigint::*;
 use queues::*;
 use sha256::digest;
 use std::convert::TryFrom;
 use std::str::FromStr;
 use std::sync::Arc;
-use fflonk_verifier::utils::{ProofWithPubSignal, construct_proof};
-use converter::converter::converter_fflonk_to_groth16;
 
 #[derive(Debug, Clone)]
 pub struct ProofValue {
-   pub proof: Vec<String>,
-   pub pub_signal: String,
+    pub proof: Vec<String>,
+    pub pub_signal: String,
 }
 
-pub async fn fetch_proof_and_pub_signal(txn_hash: H256) -> (Vec<String>, String) {
+pub async fn fetch_proof_and_pub_signal(
+    txn_hash: H256,
+) -> (Vec<String>, String, u32, [u8; 32], [u8; 32]) {
     let provider = Provider::<Ws>::connect(
         "wss://eth-mainnet.ws.alchemyapi.io/v2/nrzrNIfp7oG61YHAmoPAICuibjwqeHmN",
     )
@@ -190,7 +192,8 @@ pub async fn fetch_proof_and_pub_signal(txn_hash: H256) -> (Vec<String>, String)
 
     let sha_snark_hash_string = digest(hex::decode(snark_hash_string).unwrap());
 
-    let uint_snark_hash = U256::from_str(sha_snark_hash_string.as_str()).expect("Invalid hex value");
+    let uint_snark_hash =
+        U256::from_str(sha_snark_hash_string.as_str()).expect("Invalid hex value");
     println!("U256 value: {}", uint_snark_hash);
 
     let pub_signal = Fr::from_str(uint_snark_hash.to_string().as_str()).unwrap();
@@ -208,13 +211,18 @@ pub async fn fetch_proof_and_pub_signal(txn_hash: H256) -> (Vec<String>, String)
 
     // proof_values_ref = proof_values.iter().map(|s| s.as_str()).collect();
 
-    (proof_values, uint_snark_hash.to_string())
+    (
+        proof_values,
+        uint_snark_hash.to_string(),
+        rollup_id,
+        nle,
+        nsr,
+    )
 
     // let proof_with_pub_signal = construct_proof(proof_values_ref, pub_signal);
 
     // proof_with_pub_signal
 }
-
 
 // pub async fn convert_proof(proof: ProofValue) {
 //     println!("Converting Proof...");
