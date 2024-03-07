@@ -23,8 +23,8 @@ risc0_zkvm::guest::entry!(main);
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 struct ProofInput {
-    input: [Vec<String>; 2],
-    signal: [String; 2]
+    input: [Vec<String>; 1],
+    signal: [String; 1]
 }
 
 
