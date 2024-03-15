@@ -28,7 +28,6 @@ struct ProofInput {
     signal: [String; 1]
 }
 
-
 fn main() {
     let proof_input: ProofInput = env::read();
     let start = env::cycle_count();

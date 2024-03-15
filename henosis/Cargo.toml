@@ -18,12 +18,5 @@ regex = "1"
 fflonk_verifier = { path = "../fflonk_verifier" }
 converter = { path = "../converter" }
 groth16_aggregator = { path = "../groth16_aggregator" }
+agghost = { path = "../agghost" }
 tokio-stream = "0.1.14"
-avail-subxt = { git = "https://github.com/availproject/avail.git", tag = "v1.11.0.0", features = ["std"]}
-
-[patch.crates-io]
-sp-core = { git = "https://github.com/availproject/substrate.git", branch = "goldberg" }
-sp-io = { git = "https://github.com/availproject/substrate.git", branch = "goldberg" }
-sp-runtime = { git = "https://github.com/availproject/substrate.git", branch = "goldberg" }
-sp-std = { git = "https://github.com/availproject/substrate.git", branch = "goldberg" }
-sp-core-hashing = { git = "https://github.com/availproject/substrate.git", branch = "goldberg" }

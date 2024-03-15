@@ -5,6 +5,7 @@ use ethers::contract::{abigen, Contract};
 use ethers::prelude::*;
 use ethers::utils::hex;
 use fflonk_verifier::utils::ProofWithPubSignal;
+use agghost::aggregator::aggregator_stark_receipts;
 use groth16_aggregator::verifier::run;
 pub use henosis::fetcher::{fetch_proof_and_pub_signal, ProofValue};
 use num_bigint::*;
@@ -113,55 +114,61 @@ fn main() {
                     receipt
                 });
 
-                println!("Receipt: {:?}", receipt);
+                // println!("Receipt: {:?}", receipt);
+                println!("passing receipts inside ");
 
-                let a = receipt.snark.a;
-                let b = receipt.snark.b;
-                let c = receipt.snark.c;
-                let public = receipt.snark.public;
+                let final_agg_receipt = aggregator_stark_receipts([receipt.clone(), receipt]);
+                println!("Final Aggregated Receipt: {:?}", final_agg_receipt);
 
-                let a_0_bigint = U256::from_big_endian(&a[0]);
-                let a_1_bigint = U256::from_big_endian(&a[1]);
-                let b_0_0_bigint = U256::from_big_endian(&b[0][0]);
-                let b_0_1_bigint = U256::from_big_endian(&b[0][1]);
-                let b_1_0_bigint = U256::from_big_endian(&b[1][0]);
-                let b_1_1_bigint = U256::from_big_endian(&b[1][1]);
-                let c_0_bigint = U256::from_big_endian(&c[0]);
-                let c_1_bigint = U256::from_big_endian(&c[1]);
-                let public_0_bigint = U256::from_big_endian(&public[0]);
-                let public_1_bigint = U256::from_big_endian(&public[1]);
-                let public_2_bigint = U256::from_big_endian(&public[2]);
-                let public_3_bigint = U256::from_big_endian(&public[3]);
+                // commenting halo2 aggregation for a bit
 
-                let a_0_bigint_string = a_0_bigint.to_string();
-                let a_1_bigint_string = a_1_bigint.to_string();
-                let b_0_0_bigint_string = b_0_0_bigint.to_string();
-                let b_0_1_bigint_string = b_0_1_bigint.to_string();
-                let b_1_0_bigint_string = b_1_0_bigint.to_string();
-                let b_1_1_bigint_string = b_1_1_bigint.to_string();
-                let c_0_bigint_string = c_0_bigint.to_string();
-                let c_1_bigint_string = c_1_bigint.to_string();
-                let public_0_bigint_string = public_0_bigint.to_string();
-                let public_1_bigint_string = public_1_bigint.to_string();
-                let public_2_bigint_string = public_2_bigint.to_string();
-                let public_3_bigint_string = public_3_bigint.to_string();
+                // let a = receipt.snark.a;
+                // let b = receipt.snark.b;
+                // let c = receipt.snark.c;
+                // let public = receipt.snark.public;
 
-                let _ = run(
-                    a_0_bigint_string,
-                    a_1_bigint_string,
-                    b_0_0_bigint_string,
-                    b_0_1_bigint_string,
-                    b_1_0_bigint_string,
-                    b_1_1_bigint_string,
-                    c_0_bigint_string,
-                    c_1_bigint_string,
-                    public_0_bigint_string,
-                    public_1_bigint_string,
-                    public_2_bigint_string,
-                    public_3_bigint_string,
-                );
+                // let a_0_bigint = U256::from_big_endian(&a[0]);
+                // let a_1_bigint = U256::from_big_endian(&a[1]);
+                // let b_0_0_bigint = U256::from_big_endian(&b[0][0]);
+                // let b_0_1_bigint = U256::from_big_endian(&b[0][1]);
+                // let b_1_0_bigint = U256::from_big_endian(&b[1][0]);
+                // let b_1_1_bigint = U256::from_big_endian(&b[1][1]);
+                // let c_0_bigint = U256::from_big_endian(&c[0]);
+                // let c_1_bigint = U256::from_big_endian(&c[1]);
+                // let public_0_bigint = U256::from_big_endian(&public[0]);
+                // let public_1_bigint = U256::from_big_endian(&public[1]);
+                // let public_2_bigint = U256::from_big_endian(&public[2]);
+                // let public_3_bigint = U256::from_big_endian(&public[3]);
 
-                println!("Aggregated 2 proof");
+                // let a_0_bigint_string = a_0_bigint.to_string();
+                // let a_1_bigint_string = a_1_bigint.to_string();
+                // let b_0_0_bigint_string = b_0_0_bigint.to_string();
+                // let b_0_1_bigint_string = b_0_1_bigint.to_string();
+                // let b_1_0_bigint_string = b_1_0_bigint.to_string();
+                // let b_1_1_bigint_string = b_1_1_bigint.to_string();
+                // let c_0_bigint_string = c_0_bigint.to_string();
+                // let c_1_bigint_string = c_1_bigint.to_string();
+                // let public_0_bigint_string = public_0_bigint.to_string();
+                // let public_1_bigint_string = public_1_bigint.to_string();
+                // let public_2_bigint_string = public_2_bigint.to_string();
+                // let public_3_bigint_string = public_3_bigint.to_string();
+
+                // let _ = run(
+                //     a_0_bigint_string,
+                //     a_1_bigint_string,
+                //     b_0_0_bigint_string,
+                //     b_0_1_bigint_string,
+                //     b_1_0_bigint_string,
+                //     b_1_1_bigint_string,
+                //     c_0_bigint_string,
+                //     c_1_bigint_string,
+                //     public_0_bigint_string,
+                //     public_1_bigint_string,
+                //     public_2_bigint_string,
+                //     public_3_bigint_string,
+                // );
+
+                // println!("Aggregated 2 proof");
             }
         }
     }
