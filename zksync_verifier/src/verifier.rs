@@ -109,6 +109,7 @@ fn add_assign_lookup_linearisation_contribution_with_v(
     proof: Proof,
     pvs: PartialVerifierState
 ) -> (Fr, Fr) {
+
     let state_power_of_alpha_6 = pvs.power_of_alpha_6;
     let state_power_of_alpha_7 = pvs.power_of_alpha_7;
     let state_power_of_alpha_8 = pvs.power_of_alpha_8;
@@ -1619,3 +1620,4 @@ pub fn apply_fr_mask(out: Vec<u8>) -> Vec<u8> {
 
     res_fr.to_vec()
 }
+

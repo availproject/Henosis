@@ -84,7 +84,7 @@ fn main() {
     // config for using bonsai for proving
 
     let url = "https://api.bonsai.xyz/".to_string();
-    let api_key = "JdRSXY9tV47TkxmQr8Rje9efJT0WWxLG1Q3yMYFc".to_string();
+    let api_key = "M63bb1XBrm3HU1n84jf4radtDFnRYrsT1RZKY20F".to_string();
     let client = bonsai_sdk::Client::from_parts(url, api_key, risc0_zkvm::VERSION)
         .expect("Failed to construct sdk client");
 
@@ -123,6 +123,9 @@ fn main() {
 
             let receipt_buf = client.download(&receipt_url).unwrap();
             let receipt: Receipt = bincode::deserialize(&receipt_buf).unwrap();
+            println!("Receipt: {:?}", receipt);
+            println!("Inner receipt {:?}", receipt.inner);
+            println!("Journal: {:?}", receipt.journal);
             receipt
                 .verify(VERIFIER_ID)
                 .expect("Receipt verification failed");
@@ -137,30 +140,30 @@ fn main() {
         break;
     }
 
-    let snark_session = client.create_snark(session.uuid).unwrap();
-    eprintln!("Created snark session: {}", snark_session.uuid);
-    loop {
-        let res = snark_session.status(&client).unwrap();
-        match res.status.as_str() {
-            "RUNNING" => {
-                eprintln!("Current status: {} - continue polling...", res.status,);
-                std::thread::sleep(Duration::from_secs(15));
-                continue;
-            }
-            "SUCCEEDED" => {
-                let snark_receipt = res.output;
-                eprintln!("Snark proof!: {snark_receipt:?}");
-                break;
-            }
-            _ => {
-                panic!(
-                    "Workflow exited: {} err: {}",
-                    res.status,
-                    res.error_msg.unwrap_or_default()
-                );
-            }
-        }
-    }
+    // let snark_session = client.create_snark(session.uuid).unwrap();
+    // eprintln!("Created snark session: {}", snark_session.uuid);
+    // loop {
+    //     let res = snark_session.status(&client).unwrap();
+    //     match res.status.as_str() {
+    //         "RUNNING" => {
+    //             eprintln!("Current status: {} - continue polling...", res.status,);
+    //             std::thread::sleep(Duration::from_secs(15));
+    //             continue;
+    //         }
+    //         "SUCCEEDED" => {
+    //             let snark_receipt = res.output;
+    //             eprintln!("Snark proof!: {snark_receipt:?}");
+    //             break;
+    //         }
+    //         _ => {
+    //             panic!(
+    //                 "Workflow exited: {} err: {}",
+    //                 res.status,
+    //                 res.error_msg.unwrap_or_default()
+    //             );
+    //         }
+    //     }
+    // }
 
     let proving_and_conversion_end_time = Instant::now();
     let elapsed_time = proving_and_conversion_end_time.duration_since(proving_and_conversion_start_time);

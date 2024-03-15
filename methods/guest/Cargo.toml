@@ -10,6 +10,7 @@ edition = "2021"
 risc0-zkvm = { version = "0.20.1", default-features = false, features = [ "std" ] }
 # plonk_verifier = { path = "../../plonk_verifier" }
 fflonk_verifier = { path = "../../fflonk_verifier" }
+zksync_verifier = { path = "../../zksync_verifier" }
 ark-bn254 = "0.3.0"
 ark-ec = "0.3.0"
 ark-ff = "0.3.0"
