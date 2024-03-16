@@ -1,5 +1,5 @@
 [package]
-name = "aggregator"
+name = "zksyncguest"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,5 +9,4 @@ edition = "2021"
 # If you want to try (experimental) std support, add `features = [ "std" ]` to risc0-zkvm
 risc0-zkvm = { version = "0.20.1", default-features = false, features = [ "std" ] }
 serde = "1.0"
-zkevmguest = { path = "../../zkevmguest" }
-zksyncguest = { path = "../../zksyncguest" }
+zksync_verifier = { path = "../../zksync_verifier" }

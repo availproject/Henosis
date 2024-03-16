@@ -9,7 +9,6 @@ use bincode;
 use bonsai_sdk::alpha as bonsai_sdk;
 use fflonk_verifier::utils::{G1Point, Proof};
 use hex;
-use methods::{VERIFIER_ELF, VERIFIER_ID};
 use risc0_zkvm::{compute_image_id, serde::to_vec, Receipt, ExecutorEnv, default_prover};
 use std::fmt::{Debug, DebugMap, Display};
 use std::marker::PhantomData;

@@ -5,8 +5,8 @@ use std::time::{Duration, Instant};
 
 pub fn aggregate_stark_receipts(stark_receipts: [Receipt; 2]) -> Receipt {
     let env = ExecutorEnv::builder()
-        .add_assumption(stark_receipts[0].clone())
-        .add_assumption(stark_receipts[1].clone())
+        .add_assumption(stark_receipts[0].clone()) // zkevm stark receipt
+        .add_assumption(stark_receipts[1].clone()) // zksync stark receipt
         .write(&(true))
         .unwrap()
         .build()

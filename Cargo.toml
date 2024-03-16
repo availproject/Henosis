@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "groth16_aggregator", "converter", "methods", "plonk_verifier", "henosis", "fflonk_verifier", "zksync_verifier", "aggregator", "agghost"]
+members = [ "groth16_aggregator", "converter", "zkevmguest", "plonk_verifier", "henosis", "fflonk_verifier", "zksync_verifier", "aggregator", "agghost", "zksyncguest"]
 
 # Always optimize; building and running the guest takes much longer without optimization.
 [profile.dev]

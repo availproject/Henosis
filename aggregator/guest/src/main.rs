@@ -5,9 +5,12 @@ use risc0_zkvm::{guest::env, serde};
 use std::str::FromStr;
 
 risc0_zkvm::guest::entry!(main);
-use methods::VERIFIER_ID;
+use zkevmguest::VERIFIER_ID;
+use zksyncguest::ZKSYNCGUEST_ID;
 
 fn main() {
-    let isVerified: bool = env::read();
-    env::verify(VERIFIER_ID, &serde::to_vec(&isVerified).unwrap()).unwrap();
+    let isProofVerified: bool = env::read();
+
+    env::verify(VERIFIER_ID, &serde::to_vec(&isProofVerified).unwrap()).unwrap();
+    env::verify(ZKSYNCGUEST_ID, &serde::to_vec(&isProofVerified).unwrap()).unwrap();
 }
