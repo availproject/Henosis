@@ -1,5 +1,5 @@
 use ark_bn254::Fr;
-use converter::converter::converter_fflonk_to_groth16;
+use converter::converter::{convert_fflonk_to_stark, convert_mplonk_to_stark};
 use ethabi::{ParamType, Token};
 use ethers::contract::{abigen, Contract};
 use ethers::prelude::*;
@@ -91,21 +91,34 @@ fn main() {
             println!("Transaction: {:?}", tx);
 
             // Performing Aggregation
-            if proof_queues.size() == 2 {
+            if proof_queues.size() == 1 { // since for now we are only fetching 1 proof from polygon zkevm and for zksync we hardcoded for now
                 println!("Inside queue !!");
                 let proof1 = proof_queues.peek().unwrap();
                 let _ = proof_queues.remove();
-                let proof2 = proof_queues.peek().unwrap();
-                let _ = proof_queues.remove();
+                // let proof2 = proof_queues.peek().unwrap();
+                // let _ = proof_queues.remove();
 
-                println!("Proofs for Aggregation");
+                println!("Recursively verifying zkevm proof");
 
-                let receipt = rt.block_on(async {
+                let zkevm_stark_receipt = rt.block_on(async {
                     let receipt = task::spawn_blocking(|| {
-                        let receipt = converter_fflonk_to_groth16(
-                            [proof1.proof, proof2.proof],
-                            [proof1.pub_signal, proof2.pub_signal],
+                        let receipt = convert_fflonk_to_stark(
+                            [proof1.proof],
+                            [proof1.pub_signal],
                         );
+                        receipt
+                    })
+                    .await
+                    .unwrap();
+
+                    receipt
+                });
+
+                println!("Recursively verifying zksync proof");
+
+                let zksync_stark_receipt = rt.block_on(async {
+                    let receipt = task::spawn_blocking(|| {
+                        let receipt = convert_mplonk_to_stark();
                         receipt
                     })
                     .await
@@ -116,7 +129,7 @@ fn main() {
 
                 println!("passing receipts inside for aggregation");
 
-                let final_agg_receipt = aggregate_stark_receipts([receipt.clone(), receipt]);
+                let final_agg_receipt = aggregate_stark_receipts([zkevm_stark_receipt, zksync_stark_receipt]);
                 println!("Final Aggregated Receipt: {:?}", final_agg_receipt);
 
                 // commenting halo2 aggregation for a bit
