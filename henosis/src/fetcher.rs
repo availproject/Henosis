@@ -1,5 +1,4 @@
 use ark_bn254::{Fr, FrParameters};
-use converter::converter::converter_fflonk_to_groth16;
 use ethabi::{ParamType, Token};
 use ethers::contract::{abigen, Contract};
 use ethers::prelude::*;
@@ -218,14 +217,4 @@ pub async fn fetch_proof_and_pub_signal(
         nle,
         nsr,
     )
-
-    // let proof_with_pub_signal = construct_proof(proof_values_ref, pub_signal);
-
-    // proof_with_pub_signal
 }
-
-// pub async fn convert_proof(proof: ProofValue) {
-//     println!("Converting Proof...");
-//     let receipt = converter_fflonk_to_groth16(proof.proof, proof.pub_signal);
-//     // println!("Receipt: {:?}", receipt);
-// }

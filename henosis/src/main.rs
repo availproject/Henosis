@@ -5,7 +5,7 @@ use ethers::contract::{abigen, Contract};
 use ethers::prelude::*;
 use ethers::utils::hex;
 use fflonk_verifier::utils::ProofWithPubSignal;
-use agghost::aggregator::aggregator_stark_receipts;
+use agghost::aggregator::aggregate_stark_receipts;
 use groth16_aggregator::verifier::run;
 pub use henosis::fetcher::{fetch_proof_and_pub_signal, ProofValue};
 use num_bigint::*;
@@ -114,10 +114,9 @@ fn main() {
                     receipt
                 });
 
-                // println!("Receipt: {:?}", receipt);
-                println!("passing receipts inside ");
+                println!("passing receipts inside for aggregation");
 
-                let final_agg_receipt = aggregator_stark_receipts([receipt.clone(), receipt]);
+                let final_agg_receipt = aggregate_stark_receipts([receipt.clone(), receipt]);
                 println!("Final Aggregated Receipt: {:?}", final_agg_receipt);
 
                 // commenting halo2 aggregation for a bit
