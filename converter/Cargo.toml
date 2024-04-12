@@ -7,7 +7,7 @@ edition = "2021"
 zkevmguest = { path = "../zkevmguest" }
 zksyncguest = { path = "../zksyncguest" }
 fflonk_verifier = { path = "../fflonk_verifier" }
-risc0-zkvm = { version = "0.20.1" }
+risc0-zkvm = { version = "0.21.0" }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 serde = "1.0"
 bonsai-sdk = "0.6.1"

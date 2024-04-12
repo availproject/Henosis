@@ -9,7 +9,6 @@ use zksync_verifier::verifier::verify as zksyncVerifier;
 fn main() {
     let sample_input: u32 = env::read();
     // zksyncVerifier(); // pretty computationally intensive 
-
     // need to verify zksync proof here
     // true here stating that proof successfully verified
     let isVerified: bool = true;

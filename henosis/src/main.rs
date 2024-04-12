@@ -23,13 +23,16 @@ use tokio::task;
 fn main() {
     let rt = Runtime::new().unwrap();
 
-    let POLYGON_ZKEVM_PROXY: Address = "0x5132A183E9F3CB7C848b0AAC5Ae0c4f0491B7aB2"
+    let polygon_zkevm_proxy: Address = "0x5132A183E9F3CB7C848b0AAC5Ae0c4f0491B7aB2"
         .parse()
         .expect("Invalid contract address");
 
+    let eth_mainnet_rpc = "https://eth-mainnet.ws.alchemyapi.io/v2/nrzrNIfp7oG61YHAmoPAICuibjwqeHmN";
+    let eth_mainnet_wss = "wss://eth-mainnet.ws.alchemyapi.io/v2/nrzrNIfp7oG61YHAmoPAICuibjwqeHmN";
+
     let provider = rt.block_on(async {
         let provider = Provider::<Ws>::connect(
-            "wss://eth-mainnet.ws.alchemyapi.io/v2/nrzrNIfp7oG61YHAmoPAICuibjwqeHmN",
+            eth_mainnet_wss,
         )
         .await
         .unwrap();
@@ -37,13 +40,13 @@ fn main() {
     });
 
     let http_provider = Provider::<Http>::try_from(
-        "https://eth-mainnet.ws.alchemyapi.io/v2/nrzrNIfp7oG61YHAmoPAICuibjwqeHmN",
+        eth_mainnet_rpc,
     )
     .unwrap();
 
     let mut proof_queues: Queue<ProofValue> = queue![];
 
-    let filter = Filter::new().address(vec![POLYGON_ZKEVM_PROXY]);
+    let filter = Filter::new().address(vec![polygon_zkevm_proxy]);
 
     let mut logs = rt.block_on(async {
         let log = provider.subscribe_logs(&filter).await.unwrap();
@@ -52,13 +55,13 @@ fn main() {
 
     println!("Henosis Proof Aggregator Listening for Proofs!!");
 
+    // uncomment it to start fetching Polygon zkevm proof
     // while let Some(mut txn_hash) = rt.block_on(async {
     //     let hash = logs.next().await.unwrap().transaction_hash;
     //     hash
     // })
     
     loop {
-        // println!("Transaction Hash: {:?}", txn_hash);
         let sample_hash =
             H256::from_str("0xed0c28abb022be570305ae3cd454c5c3bb027ede55cfdefe6744bc1b5af90d8a")
                 .unwrap();
@@ -75,7 +78,7 @@ fn main() {
             tx
         });
 
-        if tx.to.unwrap() == POLYGON_ZKEVM_PROXY {
+        if tx.to.unwrap() == polygon_zkevm_proxy {
 
             let _proof = rt.block_on(async {
                 let proof = fetch_proof_and_pub_signal(txn_hash).await;
@@ -95,8 +98,6 @@ fn main() {
                 println!("Inside queue !!");
                 let proof1 = proof_queues.peek().unwrap();
                 let _ = proof_queues.remove();
-                // let proof2 = proof_queues.peek().unwrap();
-                // let _ = proof_queues.remove();
 
                 println!("Recursively verifying zkevm proof");
 
@@ -127,60 +128,10 @@ fn main() {
                     receipt
                 });
 
-                println!("passing receipts inside for aggregation");
+                // uncomment it for receipt aggregation
+                // let final_agg_receipt = aggregate_stark_receipts([zkevm_stark_receipt, zksync_stark_receipt]);
+                // println!("Final Aggregated Receipt: {:?}", final_agg_receipt);
 
-                let final_agg_receipt = aggregate_stark_receipts([zkevm_stark_receipt, zksync_stark_receipt]);
-                println!("Final Aggregated Receipt: {:?}", final_agg_receipt);
-
-                // commenting halo2 aggregation for a bit
-
-                // let a = receipt.snark.a;
-                // let b = receipt.snark.b;
-                // let c = receipt.snark.c;
-                // let public = receipt.snark.public;
-
-                // let a_0_bigint = U256::from_big_endian(&a[0]);
-                // let a_1_bigint = U256::from_big_endian(&a[1]);
-                // let b_0_0_bigint = U256::from_big_endian(&b[0][0]);
-                // let b_0_1_bigint = U256::from_big_endian(&b[0][1]);
-                // let b_1_0_bigint = U256::from_big_endian(&b[1][0]);
-                // let b_1_1_bigint = U256::from_big_endian(&b[1][1]);
-                // let c_0_bigint = U256::from_big_endian(&c[0]);
-                // let c_1_bigint = U256::from_big_endian(&c[1]);
-                // let public_0_bigint = U256::from_big_endian(&public[0]);
-                // let public_1_bigint = U256::from_big_endian(&public[1]);
-                // let public_2_bigint = U256::from_big_endian(&public[2]);
-                // let public_3_bigint = U256::from_big_endian(&public[3]);
-
-                // let a_0_bigint_string = a_0_bigint.to_string();
-                // let a_1_bigint_string = a_1_bigint.to_string();
-                // let b_0_0_bigint_string = b_0_0_bigint.to_string();
-                // let b_0_1_bigint_string = b_0_1_bigint.to_string();
-                // let b_1_0_bigint_string = b_1_0_bigint.to_string();
-                // let b_1_1_bigint_string = b_1_1_bigint.to_string();
-                // let c_0_bigint_string = c_0_bigint.to_string();
-                // let c_1_bigint_string = c_1_bigint.to_string();
-                // let public_0_bigint_string = public_0_bigint.to_string();
-                // let public_1_bigint_string = public_1_bigint.to_string();
-                // let public_2_bigint_string = public_2_bigint.to_string();
-                // let public_3_bigint_string = public_3_bigint.to_string();
-
-                // let _ = run(
-                //     a_0_bigint_string,
-                //     a_1_bigint_string,
-                //     b_0_0_bigint_string,
-                //     b_0_1_bigint_string,
-                //     b_1_0_bigint_string,
-                //     b_1_1_bigint_string,
-                //     c_0_bigint_string,
-                //     c_1_bigint_string,
-                //     public_0_bigint_string,
-                //     public_1_bigint_string,
-                //     public_2_bigint_string,
-                //     public_3_bigint_string,
-                // );
-
-                // println!("Aggregated 2 proof");
             }
         }
     }
