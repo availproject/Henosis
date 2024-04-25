@@ -34,6 +34,6 @@ PS: Currently Henosis only fetches and convert Polygon zkevm proofs since conver
 
 `zkevmguest`: It imports `fflonk_verifier` and enable recursive verification of zkevm fflonk proofs. To get final STARK of Groth16 (using stark to snark converter) proofs.
 
-
+**IMPORTANT:** The project is not production ready yet and should not be used in production environment.
 
 
