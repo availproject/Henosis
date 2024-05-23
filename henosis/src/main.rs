@@ -115,18 +115,18 @@ fn main() {
                     receipt
                 });
 
-                println!("Recursively verifying zksync proof");
+                // println!("Recursively verifying zksync proof");
 
-                let zksync_stark_receipt = rt.block_on(async {
-                    let receipt = task::spawn_blocking(|| {
-                        let receipt = convert_mplonk_to_stark();
-                        receipt
-                    })
-                    .await
-                    .unwrap();
+                // let zksync_stark_receipt = rt.block_on(async {
+                //     let receipt = task::spawn_blocking(|| {
+                //         let receipt = convert_mplonk_to_stark();
+                //         receipt
+                //     })
+                //     .await
+                //     .unwrap();
 
-                    receipt
-                });
+                //     receipt
+                // });
 
                 // uncomment it for receipt aggregation
                 // let final_agg_receipt = aggregate_stark_receipts([zkevm_stark_receipt, zksync_stark_receipt]);

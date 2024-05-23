@@ -1,28 +1,20 @@
 pub use crate::utils::{get_domain_size, get_omegas, get_proof, get_pubSignals, Omegas, Proof, ProofWithPubSignal};
 use ark_bn254::{
-    g1, g1::Parameters, Bn254, Fq, FqParameters, Fr, FrParameters, G1Projective, G2Projective,
+     g1::Parameters, Bn254, Fq, Fr, FrParameters, G1Projective,
 };
-use ark_bn254::{g2, Fq2, Fq2Parameters, G2Affine};
+use ark_bn254::{ Fq2, G2Affine};
 use ark_ec::short_weierstrass_jacobian::GroupAffine;
 use ark_ec::*;
 use ark_ff::{
-    field_new, Field, Fp256, Fp256Parameters, Fp2ParamsWrapper, One, PrimeField, QuadExtField,
-    UniformRand, Zero,
+    Field, Fp256, One, Zero,
 };
-use ark_poly::{domain, Polynomial};
-use core::num;
-use std::fmt::{format, Debug, DebugMap, Display};
-use std::hash::Hash;
-use std::marker::PhantomData;
-use std::ops::{Add, Mul, Neg, Sub};
+use std::ops::{Add, Mul, Sub};
 use std::str::FromStr;
 use std::vec;
 use crate::utils::get_proog_bigint;
 use num_bigint::*;
 
 use tiny_keccak::{Hasher, Keccak};
-use num_bigint::BigUint;
-
 
 pub type G1Point = <Bn254 as PairingEngine>::G1Affine;
 pub type G2Point = <Bn254 as PairingEngine>::G2Affine;
@@ -38,8 +30,8 @@ pub struct Challenges {
     pub beta: Fp256<FrParameters>,
     pub gamma: Fp256<FrParameters>,
     pub y: Fp256<FrParameters>,
-    pub xiSeed: Fp256<FrParameters>,
-    pub xiSeed2: Fp256<FrParameters>,
+    pub xi_seed: Fp256<FrParameters>,
+    pub xi_seed2: Fp256<FrParameters>,
     pub xi: Fp256<FrParameters>,
 }
 
@@ -59,35 +51,26 @@ pub struct VerifierProcessedInputs {
     pub x2y2: BigInt,
 }
 
-fn fr_parameter_to_hex_string(hex_string: String) -> [u8; 32] {
-    // Convert the value to a hexadecimal string
-    // let hex_string = value.to_string();
 
-    // Extract the desired bits (8 to 72 characters) and prepend "0x"
-    let substring = format!("0x{}", &hex_string[8..72]);
-
-    substring.as_bytes().try_into().unwrap()
-}
 
 pub fn compute_challenges(
-    challenges: &mut Challenges, roots: &mut Roots, mut zh: &mut Fp256<FrParameters>, zhinv: &mut Fp256<FrParameters>, vpi: VerifierProcessedInputs, pubSignals: BigInt
+    challenges: &mut Challenges, roots: &mut Roots, zh: &mut Fp256<FrParameters>, zhinv: &mut Fp256<FrParameters>, vpi: VerifierProcessedInputs, pub_signals: BigInt
 ){
     let mut hasher = Keccak::v256();
 
-    let val1 = vpi.c0x.to_bytes_be();
-    let val2 = vpi.c0y.to_bytes_be();
-    let val3 = pubSignals.to_bytes_be();
-    let val4 = get_proog_bigint().c1.0.to_bytes_be();
-    let val5 = get_proog_bigint().c1.1.to_bytes_be();
-
     let mut concatenated = Vec::new();
-    concatenated.extend_from_slice(&padd_bytes32(val1.1));
-    concatenated.extend_from_slice(&padd_bytes32(val2.1));
-    concatenated.extend_from_slice(&padd_bytes32(val3.1));
-    concatenated.extend_from_slice(&padd_bytes32(val4.1));
-    concatenated.extend_from_slice(&padd_bytes32(val5.1));
 
-    hasher.update(&concatenated);
+    let vals = [
+        vpi.c0x.to_bytes_be(),
+        vpi.c0y.to_bytes_be(),
+        pub_signals.to_bytes_be(),
+        get_proog_bigint().c1.0.to_bytes_be(),
+        get_proog_bigint().c1.1.to_bytes_be(),
+    ];
+
+    for val in &vals {
+        hasher.update(&padd_bytes32(val.1.clone()));
+    }
 
     let mut out = [0u8; 32];
     hasher.finalize(&mut out);
@@ -126,17 +109,14 @@ pub fn compute_challenges(
     hasher3.update(&concatenated);
     out = [0u8; 32];
     hasher3.finalize(&mut out);
-    let _xiSeed = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
-    let xiSeed = Fr::from_str(&_xiSeed.to_string()).unwrap();
-
-    // println!("xiSeed: {:?}", xiSeed.to_string());
+    let _xi_seed = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
+    let xi_seed = Fr::from_str(&_xi_seed.to_string()).unwrap();
 
     //xiSeed2
-    let mut xiSeed2 = xiSeed.mul(xiSeed);
-    // println!("xiSeed2: {:?}", xiSeed2.to_string());
+    let xi_seed2 = xi_seed.mul(xi_seed);
 
-    //roots h0w8
-    roots.h0w8[0] = xiSeed2.mul(xiSeed);
+    //roh0w8xi_seed2
+    roots.h0w8[0] = xi_seed2.mul(xi_seed);
     roots.h0w8[1] = roots.h0w8[0].mul(get_omegas().w8_1);
     roots.h0w8[2] = roots.h0w8[0].mul(get_omegas().w8_2);
     roots.h0w8[3] = roots.h0w8[0].mul(get_omegas().w8_3);
@@ -152,7 +132,7 @@ pub fn compute_challenges(
     roots.h1w4[3] = roots.h1w4[0].mul(get_omegas().w4_3);
 
     //roots h2w3
-    roots.h2w3[0] = roots.h1w4[0].mul(xiSeed2);
+    roots.h2w3[0] = roots.h1w4[0].mul(xi_seed2);
     roots.h2w3[1] = roots.h2w3[0].mul(get_omegas().w3);
     roots.h2w3[2] = roots.h2w3[0].mul(get_omegas().w3_2);
 
@@ -164,7 +144,7 @@ pub fn compute_challenges(
 
     //zh and zhInv
     let mut xin = roots.h2w3[0].mul(roots.h2w3[0]).mul(roots.h2w3[0]);
-    let mut Xin = xin;
+    let Xin_copy = xin;
     for _ in 0..24{
         xin = xin.mul(xin);
     }
@@ -178,7 +158,7 @@ pub fn compute_challenges(
     // alpha
     let mut hasher4 = Keccak::v256();
 
-    let _xiseed_string = xiSeed.to_string();
+    let _xiseed_string = xi_seed.to_string();
     let xiseed_string = &_xiseed_string[8..8+64];
     // let val6 = BigInt::parse_bytes(beta_string.trim_start_matches("0x").as_bytes(), 16).unwrap().to_bytes_be();
     let val10 = BigInt::parse_bytes(xiseed_string.to_string().as_bytes(), 16).unwrap().to_bytes_be();
@@ -250,9 +230,9 @@ pub fn compute_challenges(
     challenges.beta = beta;
     challenges.gamma = gamma;
     challenges.y = y;
-    challenges.xiSeed = xiSeed;
-    challenges.xiSeed2 = xiSeed2;
-    challenges.xi = Xin;
+    challenges.xi_seed = xi_seed;
+    challenges.xi_seed2 = xi_seed2;
+    challenges.xi = Xin_copy;
 
 } 
 
@@ -310,11 +290,11 @@ pub fn calculateInversions(
 
     let denH2 = w.clone();
 
-    let mut li_s0_inv = computeLiS0(y, h0w8);
+    let li_s0_inv = computeLiS0(y, h0w8);
 
-    let mut li_s1_inv = computeLiS1(y, h1w4);
+    let li_s1_inv = computeLiS1(y, h1w4);
 
-    let mut li_s2_inv = computeLiS2(y, xi, h2w3, h3w3);
+    let li_s2_inv = computeLiS2(y, xi, h2w3, h3w3);
     // println!()
 
     w = Fr::from_str("1").unwrap();
@@ -408,7 +388,7 @@ pub fn computeLiS1(
     let mut li_s1_inv: [Fp256<FrParameters>; 4] = [Fr::zero(); 4];
 
     for i in 0..4 {
-        let coeff = ((i * 3) % 4);
+        let coeff = (i * 3) % 4;
         den2 = h1w4[0 + coeff];
         den3 = y.add(q.sub(h1w4[0 + (i)]));
         li_s1_inv[i] = den1.mul(den2).mul(den3);
@@ -574,8 +554,8 @@ pub fn verify(proof_with_pub_signal: ProofWithPubSignal) -> bool {
         beta: Fr::zero(),
         gamma: Fr::zero(),
         y: Fr::zero(),
-        xiSeed: Fr::zero(),
-        xiSeed2: Fr::zero(),
+        xi_seed: Fr::zero(),
+        xi_seed2: Fr::zero(),
         xi: Fr::zero(),
 
     };
@@ -585,7 +565,7 @@ pub fn verify(proof_with_pub_signal: ProofWithPubSignal) -> bool {
         h2w3: [Fr::zero(); 3],
         h3w3: [Fr::zero(); 3],
     };
-    let mut vpi = VerifierProcessedInputs {
+    let vpi = VerifierProcessedInputs {
         c0x: BigInt::parse_bytes(b"7005013949998269612234996630658580519456097203281734268590713858661772481668", 10).unwrap(),
         c0y: BigInt::parse_bytes(b"869093939501355406318588453775243436758538662501260653214950591532352435323", 10).unwrap(),
         x2x1: BigInt::parse_bytes(b"21831381940315734285607113342023901060522397560371972897001948545212302161822", 10).unwrap(),
@@ -595,14 +575,14 @@ pub fn verify(proof_with_pub_signal: ProofWithPubSignal) -> bool {
 
     };
 
-    let pubSignalBigInt = BigInt::parse_bytes(b"14516932981781041565586298118536599721399535462624815668597272732223874827152", 10).unwrap();
+    let pub_signal_big_int = BigInt::parse_bytes(b"14516932981781041565586298118536599721399535462624815668597272732223874827152", 10).unwrap();
 
     
     let mut zh: &mut Fp256<FrParameters> = &mut Fr::zero();
 
     let mut zhinv: &mut Fp256<FrParameters> = &mut Fr::zero();
 
-    compute_challenges(&mut challenges, &mut roots, &mut zh, &mut zhinv, vpi, pubSignalBigInt);
+    compute_challenges(&mut challenges, &mut roots, &mut zh, &mut zhinv, vpi, pub_signal_big_int);
 
 
 
@@ -612,9 +592,9 @@ pub fn verify(proof_with_pub_signal: ProofWithPubSignal) -> bool {
 
     let gamma: Fp256<FrParameters> = challenges.gamma;
 
-    let xiseed: Fp256<FrParameters> = challenges.xiSeed;
+    let xiseed: Fp256<FrParameters> = challenges.xi_seed;
 
-    let xiseed2: Fp256<FrParameters> = challenges.xiSeed2;
+    let xiseed2: Fp256<FrParameters> = challenges.xi_seed2;
 
     let mut y: Fp256<FrParameters> = challenges.y;
 
