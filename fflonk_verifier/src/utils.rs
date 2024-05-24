@@ -1,7 +1,7 @@
 use ark_bn254::{g1, g1::Parameters, Bn254, FqParameters, Fr, FrParameters, G1Projective};
 use ark_ec::short_weierstrass_jacobian::GroupAffine;
 use ark_ec::*;
-use ark_ff::{Field, Fp256, Fp256Parameters, One, PrimeField, UniformRand, Zero};
+use ark_ff::{bytes, Field, Fp256, Fp256Parameters, One, PrimeField, UniformRand, Zero};
 use ark_poly::univariate::DensePolynomial;
 use ark_poly::{domain, Polynomial};
 use num_bigint::*;
@@ -450,4 +450,11 @@ pub fn get_domain_size() -> Fp256<FrParameters> {
 pub fn get_pubSignals() -> Fp256<FrParameters> {
     Fr::from_str("14516932981781041565586298118536599721399535462624815668597272732223874827152")
         .unwrap()
+}
+
+
+pub fn get_fr_from_bytes(out: [u8; 32]) -> Fp256<FrParameters> {
+    let _val_bigint = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
+    let val = Fr::from_str(&_val_bigint.to_string()).unwrap();
+    val
 }

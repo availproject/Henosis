@@ -11,13 +11,16 @@ use ark_ff::{
 use std::ops::{Add, Mul, Sub};
 use std::str::FromStr;
 use std::vec;
-use crate::utils::get_proog_bigint;
+use crate::utils::{get_fr_from_bytes, get_proog_bigint};
 use num_bigint::*;
 
 use tiny_keccak::{Hasher, Keccak};
 
 pub type G1Point = <Bn254 as PairingEngine>::G1Affine;
 pub type G2Point = <Bn254 as PairingEngine>::G2Affine;
+
+
+const VALUES_TO_SKIP: usize = 8;
 
 pub struct LISValues {
     pub li_s0_inv: [Fp256<FrParameters>; 8],
@@ -74,77 +77,91 @@ pub fn compute_challenges(
 
     let mut out = [0u8; 32];
     hasher.finalize(&mut out);
-    let _beta = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
-
-    let beta = Fr::from_str(&_beta.to_string()).unwrap();
+    let beta = get_fr_from_bytes(out);
 
     //gamma
     hasher = Keccak::v256();
 
     let _beta_string = beta.to_string();
-    let beta_string = &_beta_string[8..8+64];
+    let beta_string = &_beta_string[VALUES_TO_SKIP..VALUES_TO_SKIP+64];
     let val6 = BigInt::parse_bytes(beta_string.trim_start_matches("0x").as_bytes(), 16).unwrap().to_bytes_be();
     concatenated = Vec::new();
     concatenated.extend_from_slice(&padd_bytes32(val6.1));
     hasher.update(&concatenated);
     out = [0u8; 32];
     hasher.finalize(&mut out);
-    let _gamma = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
-    let gamma = Fr::from_str(&_gamma.to_string()).unwrap();
+    let gamma = get_fr_from_bytes(out);
 
     //xiseed 
     let mut hasher3 = Keccak::v256();
     let _gamma_string = gamma.to_string();
-    let gamma_string = &_gamma_string[8..8+64];
-    // println!("gamma_string: {:?}", gamma_string);
-    let val7 = BigInt::parse_bytes(gamma_string.as_bytes(), 16).unwrap().to_bytes_be();
-    let val8 = get_proog_bigint().c2.0.to_bytes_be();
-    let val9 = get_proog_bigint().c2.1.to_bytes_be();
+    let gamma_string = &_gamma_string[VALUES_TO_SKIP..VALUES_TO_SKIP+64];
+
+    let vals = [
+        BigInt::parse_bytes(gamma_string.as_bytes(), 16).unwrap().to_bytes_be(),
+        get_proog_bigint().c2.0.to_bytes_be(),
+        get_proog_bigint().c2.1.to_bytes_be(),
+    ];
 
     concatenated = Vec::new();
-    concatenated.extend_from_slice(&padd_bytes32(val7.1));
-    concatenated.extend_from_slice(&padd_bytes32(val8.1));
-    concatenated.extend_from_slice(&padd_bytes32(val9.1));
+    for val in &vals {
+        concatenated.extend_from_slice(&padd_bytes32(val.1.clone()));
+    }
 
     hasher3.update(&concatenated);
     out = [0u8; 32];
     hasher3.finalize(&mut out);
-    let _xi_seed = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
-    let xi_seed = Fr::from_str(&_xi_seed.to_string()).unwrap();
+    let xi_seed = get_fr_from_bytes(out);
 
     //xiSeed2
     let xi_seed2 = xi_seed.mul(xi_seed);
 
     //roh0w8xi_seed2
     roots.h0w8[0] = xi_seed2.mul(xi_seed);
-    roots.h0w8[1] = roots.h0w8[0].mul(get_omegas().w8_1);
-    roots.h0w8[2] = roots.h0w8[0].mul(get_omegas().w8_2);
-    roots.h0w8[3] = roots.h0w8[0].mul(get_omegas().w8_3);
-    roots.h0w8[4] = roots.h0w8[0].mul(get_omegas().w8_4);
-    roots.h0w8[5] = roots.h0w8[0].mul(get_omegas().w8_5);
-    roots.h0w8[6] = roots.h0w8[0].mul(get_omegas().w8_6);
-    roots.h0w8[7] = roots.h0w8[0].mul(get_omegas().w8_7);
+    let omegas = get_omegas();
+    for i in 1..8 {
+        roots.h0w8[i] = roots.h0w8[0].mul(match i {
+            1 => omegas.w8_1,
+            2 => omegas.w8_2,
+            3 => omegas.w8_3,
+            4 => omegas.w8_4,
+            5 => omegas.w8_5,
+            6 => omegas.w8_6,
+            _ => omegas.w8_7,
+        });
+    }
 
     //roots h1w4
     roots.h1w4[0] = roots.h0w8[0].mul(roots.h0w8[0]);
-    roots.h1w4[1] = roots.h1w4[0].mul(get_omegas().w4);
-    roots.h1w4[2] = roots.h1w4[0].mul(get_omegas().w4_2);
-    roots.h1w4[3] = roots.h1w4[0].mul(get_omegas().w4_3);
+    for i in 1..4 {
+        roots.h1w4[i] = roots.h1w4[0].mul(match i {
+            1 => omegas.w4,
+            2 => omegas.w4_2,
+            _ => omegas.w4_3,
+        });
+    }
 
     //roots h2w3
     roots.h2w3[0] = roots.h1w4[0].mul(xi_seed2);
-    roots.h2w3[1] = roots.h2w3[0].mul(get_omegas().w3);
-    roots.h2w3[2] = roots.h2w3[0].mul(get_omegas().w3_2);
+    for i in 1..3 {
+        roots.h2w3[i] = roots.h2w3[0].mul(match i {
+            1 => omegas.w3,
+            _ => omegas.w3_2,
+        });
+    }
 
     //roots h3w3
     roots.h3w3[0] = roots.h2w3[0].mul(get_omegas().wr);
-    roots.h3w3[1] = roots.h3w3[0].mul(get_omegas().w3);
-    roots.h3w3[2] = roots.h3w3[0].mul(get_omegas().w3_2);
-
+    for i in 1..3 {
+        roots.h3w3[i] = roots.h3w3[0].mul(match i {
+            1 => omegas.w3,
+            _ => omegas.w3_2,
+        });
+    }
 
     //zh and zhInv
     let mut xin = roots.h2w3[0].mul(roots.h2w3[0]).mul(roots.h2w3[0]);
-    let Xin_copy = xin;
+    let xin_copy = xin;
     for _ in 0..24{
         xin = xin.mul(xin);
     }
@@ -160,49 +177,34 @@ pub fn compute_challenges(
 
     let _xiseed_string = xi_seed.to_string();
     let xiseed_string = &_xiseed_string[8..8+64];
-    // let val6 = BigInt::parse_bytes(beta_string.trim_start_matches("0x").as_bytes(), 16).unwrap().to_bytes_be();
-    let val10 = BigInt::parse_bytes(xiseed_string.to_string().as_bytes(), 16).unwrap().to_bytes_be();
-    
-    let val11 = get_proog_bigint().eval_ql.to_bytes_be();
-    let val12 = get_proog_bigint().eval_qr.to_bytes_be();
-    let val13 = get_proog_bigint().eval_qm.to_bytes_be();
-    let val14 = get_proog_bigint().eval_qo.to_bytes_be();
-    let val15 = get_proog_bigint().eval_qc.to_bytes_be();
-    let val16 = get_proog_bigint().eval_s1.to_bytes_be();
-    let val17 = get_proog_bigint().eval_s2.to_bytes_be();
-    let val18 = get_proog_bigint().eval_s3.to_bytes_be();
-    let val19 = get_proog_bigint().eval_a.to_bytes_be();
-    let val20 = get_proog_bigint().eval_b.to_bytes_be();
-    let val21 = get_proog_bigint().eval_c.to_bytes_be();
-    let val22 = get_proog_bigint().eval_z.to_bytes_be();
-    let val23 = get_proog_bigint().eval_zw.to_bytes_be();
-    let val24 = get_proog_bigint().eval_t1w.to_bytes_be();
-    let val25 = get_proog_bigint().eval_t2w.to_bytes_be();
-
+    let vals = [
+        BigInt::parse_bytes(xiseed_string.to_string().as_bytes(), 16).unwrap().to_bytes_be(),
+        get_proog_bigint().eval_ql.to_bytes_be(),
+        get_proog_bigint().eval_qr.to_bytes_be(),
+        get_proog_bigint().eval_qm.to_bytes_be(),
+        get_proog_bigint().eval_qo.to_bytes_be(),
+        get_proog_bigint().eval_qc.to_bytes_be(),
+        get_proog_bigint().eval_s1.to_bytes_be(),
+        get_proog_bigint().eval_s2.to_bytes_be(),
+        get_proog_bigint().eval_s3.to_bytes_be(),
+        get_proog_bigint().eval_a.to_bytes_be(),
+        get_proog_bigint().eval_b.to_bytes_be(),
+        get_proog_bigint().eval_c.to_bytes_be(),
+        get_proog_bigint().eval_z.to_bytes_be(),
+        get_proog_bigint().eval_zw.to_bytes_be(),
+        get_proog_bigint().eval_t1w.to_bytes_be(),
+        get_proog_bigint().eval_t2w.to_bytes_be(),
+    ];
     concatenated = Vec::new();
-    concatenated.extend_from_slice(&padd_bytes32(val10.1));
-    concatenated.extend_from_slice(&padd_bytes32(val11.1));
-    concatenated.extend_from_slice(&padd_bytes32(val12.1));
-    concatenated.extend_from_slice(&padd_bytes32(val13.1));
-    concatenated.extend_from_slice(&padd_bytes32(val14.1));
-    concatenated.extend_from_slice(&padd_bytes32(val15.1));
-    concatenated.extend_from_slice(&padd_bytes32(val16.1));
-    concatenated.extend_from_slice(&padd_bytes32(val17.1));
-    concatenated.extend_from_slice(&padd_bytes32(val18.1));
-    concatenated.extend_from_slice(&padd_bytes32(val19.1));
-    concatenated.extend_from_slice(&padd_bytes32(val20.1));
-    concatenated.extend_from_slice(&padd_bytes32(val21.1));
-    concatenated.extend_from_slice(&padd_bytes32(val22.1));
-    concatenated.extend_from_slice(&padd_bytes32(val23.1));
-    concatenated.extend_from_slice(&padd_bytes32(val24.1));
-    concatenated.extend_from_slice(&padd_bytes32(val25.1));
+    for val in &vals {
+        concatenated.extend_from_slice(&padd_bytes32(val.1.clone()));
+    }
 
     hasher4.update(&concatenated);
 
     out = [0u8; 32];
     hasher4.finalize(&mut out);
-    let _alpha = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
-    let alpha = Fr::from_str(&_alpha.to_string()).unwrap();
+    let alpha = get_fr_from_bytes(out);
 
     println!("alpha: {:?}", alpha.to_string());
     //y
@@ -212,19 +214,20 @@ pub fn compute_challenges(
     let val26 = BigInt::parse_bytes(alpha_string.to_string().as_bytes(), 16).unwrap().to_bytes_be();
     let val27 = get_proog_bigint().w1.0.to_bytes_be();
     let val28 = get_proog_bigint().w1.1.to_bytes_be();
-
+    let vals = [
+        BigInt::parse_bytes(alpha_string.to_string().as_bytes(), 16).unwrap().to_bytes_be(),
+        get_proog_bigint().w1.0.to_bytes_be(),
+        get_proog_bigint().w1.1.to_bytes_be(),
+    ];
     concatenated = Vec::new();
-    concatenated.extend_from_slice(&(val26.1));
-    concatenated.extend_from_slice(&(val27.1));
-    concatenated.extend_from_slice(&(val28.1));
+    for val in &vals {
+        concatenated.extend_from_slice(&padd_bytes32(val.1.clone()));
+    }
 
     hasher5.update(&concatenated);
     out = [0u8; 32];
     hasher5.finalize(&mut out);
-    let _y = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
-    let y = Fr::from_str(&_y.to_string()).unwrap();
-
-    println!("y: {:?}", y.to_string());
+    let y = get_fr_from_bytes(out);
 
     challenges.alpha = alpha;
     challenges.beta = beta;
@@ -232,7 +235,7 @@ pub fn compute_challenges(
     challenges.y = y;
     challenges.xi_seed = xi_seed;
     challenges.xi_seed2 = xi_seed2;
-    challenges.xi = Xin_copy;
+    challenges.xi = xin_copy;
 
 } 
 
@@ -245,7 +248,7 @@ pub fn compute_lagrange(
     eval_l1.mul(zh)
 }
 
-pub fn computePi(
+pub fn compute_pi(
     pubSignals: Fp256<FrParameters>,
     eval_l1: Fp256<FrParameters>,
 ) -> Fp256<FrParameters> {
@@ -645,7 +648,7 @@ pub fn verify(proof_with_pub_signal: ProofWithPubSignal) -> bool {
 
     eval_l1 = compute_lagrange(*zh, eval_l1);
 
-    let pi = computePi(pub_signal, eval_l1);
+    let pi = compute_pi(pub_signal, eval_l1);
 
     println!("Verifying proof...");
 
