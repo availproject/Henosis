@@ -292,11 +292,11 @@ pub fn calculate_inversions(
 
     let den_h2 = w.clone();
 
-    let li_s0_inv = computeLiS0(y, h0w8);
+    let li_s0_inv = compute_li_s0(y, h0w8);
 
-    let li_s1_inv = computeLiS1(y, h1w4);
+    let li_s1_inv = compute_li_s1(y, h1w4);
 
-    let li_s2_inv = computeLiS2(y, xi, h2w3, h3w3);
+    let li_s2_inv = compute_li_s2(y, xi, h2w3, h3w3);
     // println!()
 
     w = Fr::one();
@@ -305,7 +305,7 @@ pub fn calculate_inversions(
 
     // println!("eval_l1: {}", eval_l1);
 
-    let invser_arr_resp = inverseArray(
+    let invser_arr_resp = inverse_array(
         den_h1,
         den_h2,
         zh_inv,
@@ -323,22 +323,16 @@ pub fn calculate_inversions(
     )
 }
 
-pub fn computeLiS0(
+pub fn compute_li_s0(
     y: Fp256<FrParameters>,
     h0w8: Vec<Fp256<FrParameters>>,
 ) -> [Fp256<FrParameters>; 8] {
     let root0 = h0w8[0];
 
-    let mut den1 = Fr::from_str("1").unwrap();
-    den1 = den1
-        .mul(root0)
-        .mul(root0)
-        .mul(root0)
-        .mul(root0)
-        .mul(root0)
-        .mul(root0);
-
-    // println!("den1: {}", den1);
+    let mut den1 = Fr::one();
+    for _ in 0..6 {
+        den1 = den1.mul(&root0);
+    }
 
     den1 = den1.mul(Fr::from_str("8").unwrap());
 
@@ -356,25 +350,21 @@ pub fn computeLiS0(
         let coeff = ((i * 7) % 8);
         den2 = h0w8[0 + coeff];
         // println!("den2: {}", den2);
-        den3 = y.add(q.sub(h0w8[0 + (i)]));
+        den3 = y.add(&q.sub(&h0w8[0 + (i)]));
         // println!("den3: {}", den3);
 
-        li_s0_inv[i] = den1.mul(den2).mul(den3);
+        li_s0_inv[i] = den1.mul(&den2).mul(&den3);
 
-        // println!("li_s0_inv: {}", li_s0_inv[i]);
-        // println!();
     }
-    // println!("li_s0_inv: {}", li_s0_inv[7]);
-
     li_s0_inv
 }
 
-pub fn computeLiS1(
+pub fn compute_li_s1(
     y: Fp256<FrParameters>,
     h1w4: Vec<Fp256<FrParameters>>,
 ) -> [Fp256<FrParameters>; 4] {
     let root0 = h1w4[0];
-    let mut den1 = Fr::from_str("1").unwrap();
+    let mut den1 = Fr::one();
     den1 = den1.mul(root0).mul(root0);
 
     den1 = den1.mul(Fr::from_str("4").unwrap());
@@ -396,11 +386,10 @@ pub fn computeLiS1(
         li_s1_inv[i] = den1.mul(den2).mul(den3);
     }
 
-    // println!("li_s1_inv: {}", li_s1_inv[3]);
     li_s1_inv
 }
 
-pub fn computeLiS2(
+pub fn compute_li_s2(
     y: Fp256<FrParameters>,
     xi: Fp256<FrParameters>,
     h2w3: Vec<Fp256<FrParameters>>,
@@ -439,31 +428,30 @@ pub fn computeLiS2(
     li_s2_inv
 }
 
-pub fn inverseArray(
-    denH1: Fp256<FrParameters>,
-    denH2: Fp256<FrParameters>,
-    zhInv: Fp256<FrParameters>,
+pub fn inverse_array(
+    den_h1: Fp256<FrParameters>,
+    den_h2: Fp256<FrParameters>,
+    zh_inv: Fp256<FrParameters>,
     li_s0_inv: [Fp256<FrParameters>; 8],
     li_s1_inv: [Fp256<FrParameters>; 4],
     li_s2_inv: [Fp256<FrParameters>; 6],
     eval_l1: &mut Fp256<FrParameters>,
 ) -> (LISValues, Fp256<FrParameters>, Fp256<FrParameters>) {
     // let mut local_eval_l1 = eval_l1.clone();
-    let mut local_den_h1 = denH1.clone();
-    let mut local_den_h2 = denH2.clone();
-    let mut local_zh_inv = zhInv.clone();
+    let local_den_h1;
+    let local_den_h2;
     let mut local_li_s0_inv = li_s0_inv.clone();
     let mut local_li_s1_inv = li_s1_inv.clone();
     let mut local_li_s2_inv = li_s2_inv.clone();
 
     let mut _acc: Vec<Fp256<FrParameters>> = Vec::new();
 
-    _acc.push(zhInv.clone());
+    _acc.push(zh_inv.clone());
 
-    let mut acc = zhInv.mul(denH1);
+    let mut acc = zh_inv.mul(den_h1);
     _acc.push(acc.clone());
 
-    acc = acc.mul(denH2);
+    acc = acc.mul(den_h2);
     _acc.push(acc.clone());
 
     for i in 0..8 {
@@ -480,15 +468,11 @@ pub fn inverseArray(
     }
     acc = acc.mul(eval_l1.clone());
     _acc.push(acc);
-    // println!("acc: {}", acc);
-    // println!("acc wala xeval_l1: {}", eval_l1);
 
+    // TODO this should be real time
     let mut inv = get_proof().eval_inv;
 
-    // println!("inv: {}", inv);
-
     let check = inv.mul(acc);
-    // println!("check: {}", check);
     assert!(check == Fr::one());
 
     acc = inv.clone();
@@ -527,15 +511,13 @@ pub fn inverseArray(
 
     _acc.pop();
     inv = acc.mul(_acc.last().unwrap().clone());
-    acc = acc.mul(denH2);
+    acc = acc.mul(den_h2);
     local_den_h2 = inv;
 
     _acc.pop();
     inv = acc.mul(_acc.last().unwrap().clone());
-    acc = acc.mul(denH1);
+    acc = acc.mul(den_h1);
     local_den_h1 = inv;
-
-    local_zh_inv = acc;
 
     let lis_values = LISValues {
         li_s0_inv: local_li_s0_inv,
@@ -544,7 +526,6 @@ pub fn inverseArray(
     };
 
     (lis_values, local_den_h1, local_den_h2)
-    // println!("local_zh_inv: {}", local_zh_inv);
 }
 
 pub fn verify(proof_with_pub_signal: ProofWithPubSignal) -> bool {
