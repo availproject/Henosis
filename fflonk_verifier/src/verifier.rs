@@ -244,7 +244,6 @@ pub fn compute_lagrange(
     zh: Fp256<FrParameters>,
     eval_l1: Fp256<FrParameters>,
 ) -> Fp256<FrParameters> {
-    let w = Fr::from_str("1").unwrap();
     eval_l1.mul(zh)
 }
 
@@ -262,10 +261,10 @@ pub fn compute_pi(
     q.add(pi.sub(eval_l1.mul(pubSignals)))
 }
 
-pub fn calculateInversions(
+pub fn calculate_inversions(
     y: Fp256<FrParameters>,
     xi: Fp256<FrParameters>,
-    zhInv: Fp256<FrParameters>,
+    zh_inv: Fp256<FrParameters>,
     h0w8: Vec<Fp256<FrParameters>>,
     h1w4: Vec<Fp256<FrParameters>>,
     h2w3: Vec<Fp256<FrParameters>>,
@@ -281,7 +280,7 @@ pub fn calculateInversions(
         .mul(y.sub(h1w4[1]).mul(y.sub(h1w4[2]).mul(y.sub(h1w4[3]))));
     // println!("w: {}", (w));
 
-    let denH1 = w.clone();
+    let den_h1 = w.clone();
 
     w = y.sub(h2w3[0]).mul(
         y.sub(h2w3[1])
@@ -291,7 +290,7 @@ pub fn calculateInversions(
 
     // println!("w: {}", (w));
 
-    let denH2 = w.clone();
+    let den_h2 = w.clone();
 
     let li_s0_inv = computeLiS0(y, h0w8);
 
@@ -300,16 +299,16 @@ pub fn calculateInversions(
     let li_s2_inv = computeLiS2(y, xi, h2w3, h3w3);
     // println!()
 
-    w = Fr::from_str("1").unwrap();
+    w = Fr::one();
 
     let mut eval_l1 = get_domain_size().mul(xi.sub(w));
 
     // println!("eval_l1: {}", eval_l1);
 
     let invser_arr_resp = inverseArray(
-        denH1,
-        denH2,
-        zhInv,
+        den_h1,
+        den_h2,
+        zh_inv,
         li_s0_inv,
         li_s1_inv,
         li_s2_inv,
@@ -632,7 +631,7 @@ pub fn verify(proof_with_pub_signal: ProofWithPubSignal) -> bool {
 
     let h3w3: Vec<Fp256<FrParameters>> = roots.h3w3.to_vec();
 
-    let mut inv_tuple = calculateInversions(
+    let mut inv_tuple = calculate_inversions(
         y,
         xi,
         *zhinv,
