@@ -452,9 +452,16 @@ pub fn get_pubSignals() -> Fp256<FrParameters> {
         .unwrap()
 }
 
-
 pub fn get_fr_from_bytes(out: [u8; 32]) -> Fp256<FrParameters> {
     let _val_bigint = BigInt::from_bytes_be(num_bigint::Sign::Plus, &out);
     let val = Fr::from_str(&_val_bigint.to_string()).unwrap();
     val
+}
+
+pub fn padd_bytes32(input: Vec<u8>) -> Vec<u8> {
+    let mut result = input.clone();
+    let mut padding = vec![0; 32 - input.len()];
+    padding.append(&mut result);
+    // result.append(&mut padding);
+    padding
 }
