@@ -540,7 +540,6 @@ pub fn verify(proof_with_pub_signal: ProofWithPubSignal) -> bool {
         xi_seed: Fr::zero(),
         xi_seed2: Fr::zero(),
         xi: Fr::zero(),
-
     };
     let mut roots = Roots {
         h0w8: [Fr::zero(); 8],
@@ -555,226 +554,70 @@ pub fn verify(proof_with_pub_signal: ProofWithPubSignal) -> bool {
         x2x2: BigInt::parse_bytes(b"17231025384763736816414546592865244497437017442647097510447326538965263639101", 10).unwrap(),
         x2y1: BigInt::parse_bytes(b"2388026358213174446665280700919698872609886601280537296205114254867301080648", 10).unwrap(),
         x2y2: BigInt::parse_bytes(b"11507326595632554467052522095592665270651932854513688777769618397986436103170", 10).unwrap(),
-
     };
 
     let pub_signal_big_int = BigInt::parse_bytes(b"14516932981781041565586298118536599721399535462624815668597272732223874827152", 10).unwrap();
 
-    
-    let mut zh: &mut Fp256<FrParameters> = &mut Fr::zero();
-
-    let mut zhinv: &mut Fp256<FrParameters> = &mut Fr::zero();
+    let mut zh: Fp256<FrParameters> = Fr::zero();
+    let mut zhinv: Fp256<FrParameters> = Fr::zero();
 
     compute_challenges(&mut challenges, &mut roots, &mut zh, &mut zhinv, vpi, pub_signal_big_int);
 
-
-
-    let alpha: Fp256<FrParameters> = challenges.alpha;
-
-    let beta: Fp256<FrParameters> = challenges.beta;
-
-    let gamma: Fp256<FrParameters> = challenges.gamma;
-
-    let xiseed: Fp256<FrParameters> = challenges.xi_seed;
-
-    let xiseed2: Fp256<FrParameters> = challenges.xi_seed2;
-
-    let mut y: Fp256<FrParameters> = challenges.y;
-
-    let mut xi: Fp256<FrParameters> = challenges.xi;
-
-    // let zh: Fp256<FrParameters> = 
-
-    // let mut zhinv: Fp256<FrParameters> = Fr::from_str(
-    //     "8663234610000964594764035144827003258323335914482598945994186647593190381653",
-    // )
-    // .unwrap();
-
-    // it is similar to zhinv just more updated value
+    let alpha = challenges.alpha;
+    let beta = challenges.beta;
+    let gamma = challenges.gamma;
+    let xi = challenges.xi;
+    let y = challenges.y;
     let zinv = zhinv.clone();
 
     let g1_x = <G1Point as AffineCurve>::BaseField::from_str("1").unwrap();
-
     let g1_y = <G1Point as AffineCurve>::BaseField::from_str("2").unwrap();
-
-    let g1_affine = G1Projective::new(
-        g1_x,
-        g1_y,
-        <G1Projective as ProjectiveCurve>::BaseField::one(),
-    )
-    .into_affine();
+    let g1_affine = G1Projective::new(g1_x, g1_y, <G1Projective as ProjectiveCurve>::BaseField::one()).into_affine();
 
     let h0w8: Vec<Fp256<FrParameters>> = roots.h0w8.to_vec();
-
     let h1w4: Vec<Fp256<FrParameters>> = roots.h1w4.to_vec();
-
     let h2w3: Vec<Fp256<FrParameters>> = roots.h2w3.to_vec();
-
     let h3w3: Vec<Fp256<FrParameters>> = roots.h3w3.to_vec();
 
-    let mut inv_tuple = calculate_inversions(
-        y,
-        xi,
-        *zhinv,
-        h0w8.clone(),
-        h1w4.clone(),
-        h2w3.clone(),
-        h3w3.clone(),
-    );
-    let mut eval_l1 = inv_tuple.0;
-    let lis_values = inv_tuple.1;
-    let denH1 = inv_tuple.2;
-    let denH2 = inv_tuple.3;
-
-    eval_l1 = compute_lagrange(*zh, eval_l1);
+    let (mut eval_l1, lis_values, denH1, denH2) = calculate_inversions(y, xi, zhinv, h0w8.clone(), h1w4.clone(), h2w3.clone(), h3w3.clone());
+    eval_l1 = compute_lagrange(zh, eval_l1);
 
     let pi = compute_pi(pub_signal, eval_l1);
 
     println!("Verifying proof...");
 
     let R0 = calculate_r0(xi, proof.clone(), y, h0w8.clone(), lis_values.li_s0_inv);
-    let R1 = calculate_r1(
-        xi,
-        proof.clone(),
-        y,
-        pi,
-        h1w4.clone(),
-        lis_values.li_s1_inv,
-        zinv,
-    );
-    let R2 = calculate_r2(
-        xi,
-        gamma,
-        beta,
-        proof.clone(),
-        y,
-        eval_l1,
-        zinv,
-        h2w3.clone(),
-        h3w3.clone(),
-        lis_values.li_s2_inv,
-    );
-    let points = compute_fej(
-        y,
-        h0w8.clone(),
-        denH1,
-        denH2,
-        alpha,
-        proof.clone(),
-        g1_affine,
-        R0,
-        R1,
-        R2,
-    );
+    let R1 = calculate_r1(xi, proof.clone(), y, pi, h1w4.clone(), lis_values.li_s1_inv, zinv);
+    let R2 = calculate_r2(xi, gamma, beta, proof.clone(), y, eval_l1, zinv, h2w3.clone(), h3w3.clone(), lis_values.li_s2_inv);
 
-    let F = points.0;
-    let E = points.1;
-    let J = points.2;
+    let (F, E, J) = compute_fej(y, h0w8.clone(), denH1, denH2, alpha, proof.clone(), g1_affine, R0, R1, R2);
 
     let W2 = proof.w2;
-
-    // first pairing value
     let p1 = F.add(-E).add(-J).add(W2.mul(y).into_affine());
 
-    let g2x1 = Fq::from_str(
-        "10857046999023057135944570762232829481370756359578518086990519993285655852781",
-    )
-    .unwrap();
-    let g2x2 = Fq::from_str(
-        "11559732032986387107991004021392285783925812861821192530917403151452391805634",
-    )
-    .unwrap();
-    let g2y1 =
-        Fq::from_str("869093939501355406318588453775243436758538662501260653214950591532352435323")
-            .unwrap();
-    let g2y2 = Fq::from_str(
-        "4082367875863433681332203403145435568316851327593401208105741076214120093531",
-    )
-    .unwrap();
-
-    // second pairing value
+    let g2x1 = Fq::from_str("10857046999023057135944570762232829481370756359578518086990519993285655852781").unwrap();
+    let g2x2 = Fq::from_str("11559732032986387107991004021392285783925812861821192530917403151452391805634").unwrap();
+    let g2y1 = Fq::from_str("869093939501355406318588453775243436758538662501260653214950591532352435323").unwrap();
+    let g2y2 = Fq::from_str("4082367875863433681332203403145435568316851327593401208105741076214120093531").unwrap();
     let g2_val = G2Affine::new(Fq2::new(g2x1, g2x2), Fq2::new(g2y1, g2y2), true);
 
-    // third pairing value
     let p3 = -W2;
 
-    // fourth pairing value
-    let x2x1 = Fq::from_str(
-        "21831381940315734285607113342023901060522397560371972897001948545212302161822",
-    )
-    .unwrap();
-    let x2x2 = Fq::from_str(
-        "17231025384763736816414546592865244497437017442647097510447326538965263639101",
-    )
-    .unwrap();
-    let x2y1 = Fq::from_str(
-        "2388026358213174446665280700919698872609886601280537296205114254867301080648",
-    )
-    .unwrap();
-    let x2y2 = Fq::from_str(
-        "11507326595632554467052522095592665270651932854513688777769618397986436103170",
-    )
-    .unwrap();
-
-    println!("Doing Pairing Check!");
+    let x2x1 = Fq::from_str("21831381940315734285607113342023901060522397560371972897001948545212302161822").unwrap();
+    let x2x2 = Fq::from_str("17231025384763736816414546592865244497437017442647097510447326538965263639101").unwrap();
+    let x2y1 = Fq::from_str("2388026358213174446665280700919698872609886601280537296205114254867301080648").unwrap();
+    let x2y2 = Fq::from_str("11507326595632554467052522095592665270651932854513688777769618397986436103170").unwrap();
     let x2_val = G2Affine::new(Fq2::new(x2x1, x2x2), Fq2::new(x2y1, x2y2), true);
 
-    // let mut challenges = Challenges {
-    //     alpha: Fr::zero(),
-    //     beta: Fr::zero(),
-    //     gamma: Fr::zero(),
-    //     y: Fr::zero(),
-    //     xiSeed: Fr::zero(),
-    //     xiSeed2: Fr::zero(),
-    //     xi: Fr::zero(),
+    println!("Doing Pairing Check!");
 
-    // };
-    // let mut roots = Roots {
-    //     h0w8: [Fr::zero(); 8],
-    //     h1w4: [Fr::zero(); 4],
-    //     h2w3: [Fr::zero(); 3],
-    //     h3w3: [Fr::zero(); 3],
-    // };
-    // let mut vpi = VerifierProcessedInputs {
-    //     c0x: BigInt::parse_bytes(b"7005013949998269612234996630658580519456097203281734268590713858661772481668", 10).unwrap(),
-    //     c0y: BigInt::parse_bytes(b"869093939501355406318588453775243436758538662501260653214950591532352435323", 10).unwrap(),
-    //     x2x1: BigInt::parse_bytes(b"21831381940315734285607113342023901060522397560371972897001948545212302161822", 10).unwrap(),
-    //     x2x2: BigInt::parse_bytes(b"17231025384763736816414546592865244497437017442647097510447326538965263639101", 10).unwrap(),
-    //     x2y1: BigInt::parse_bytes(b"2388026358213174446665280700919698872609886601280537296205114254867301080648", 10).unwrap(),
-    //     x2y2: BigInt::parse_bytes(b"11507326595632554467052522095592665270651932854513688777769618397986436103170", 10).unwrap(),
-
-    // };
-
-    // let pubSignalBigInt = BigInt::parse_bytes(b"14516932981781041565586298118536599721399535462624815668597272732223874827152", 10).unwrap();
-
-    
-    // let mut zh: &mut Fp256<FrParameters> = &mut Fr::zero();
-
-    // let mut zhInv: &mut Fp256<FrParameters> = &mut Fr::zero();
-
-    // compute_challenges(&mut challenges, &mut roots, &mut zh, &mut zhinv, vpi, pubSignalBigInt);
-
-    // let mut alpha = challenges.alpha;
-    // let mut beta = challenges.beta;
-    // let mut gamma = challenges.gamma;
-    // let mut y = challenges.y;
-    // let mut xi = challenges.xi;
-    // let mut xiseed = challenges.xiSeed;
-    // let mut xiseed2 = challenges.xiSeed2;
-    
-
-
-    
-
-
-    // let R2 = calculateR2(xi);
     let pairing1 = Bn254::pairing(p1, g2_val);
     let pairing2 = Bn254::pairing(p3, x2_val);
 
     if pairing1 == pairing2 {
         println!("Proof Verified!");
         return true;
-    } 
+    }
 
     println!("Proof verification failed!");
     false
