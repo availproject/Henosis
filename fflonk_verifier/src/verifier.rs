@@ -19,7 +19,7 @@ use tiny_keccak::{Hasher, Keccak};
 pub type G1Point = <Bn254 as PairingEngine>::G1Affine;
 pub type G2Point = <Bn254 as PairingEngine>::G2Affine;
 
-
+// on conversion of Fr values to string, there are certain characters which needs to be skipped
 const VALUES_TO_SKIP: usize = 8;
 
 pub struct LISValues {
@@ -170,7 +170,6 @@ pub fn compute_challenges(
 
     *zh = xin;
     *zhinv = xin;
-    // println!("zh: {:?}", zh.to_string());
 
     // alpha
     let mut hasher4 = Keccak::v256();
@@ -206,7 +205,6 @@ pub fn compute_challenges(
     hasher4.finalize(&mut out);
     let alpha = get_fr_from_bytes(out);
 
-    println!("alpha: {:?}", alpha.to_string());
     //y
     let mut hasher5 = Keccak::v256();
     let _alpha_string = alpha.to_string();
@@ -278,7 +276,6 @@ pub fn calculate_inversions(
     let mut w = y
         .sub(h1w4[0])
         .mul(y.sub(h1w4[1]).mul(y.sub(h1w4[2]).mul(y.sub(h1w4[3]))));
-    // println!("w: {}", (w));
 
     let den_h1 = w.clone();
 
@@ -288,8 +285,6 @@ pub fn calculate_inversions(
             .mul(y.sub(h3w3[0]).mul(y.sub(h3w3[1]).mul(y.sub(h3w3[2])))),
     );
 
-    // println!("w: {}", (w));
-
     let den_h2 = w.clone();
 
     let li_s0_inv = compute_li_s0(y, h0w8);
@@ -297,13 +292,10 @@ pub fn calculate_inversions(
     let li_s1_inv = compute_li_s1(y, h1w4);
 
     let li_s2_inv = compute_li_s2(y, xi, h2w3, h3w3);
-    // println!()
 
     w = Fr::one();
 
     let mut eval_l1 = get_domain_size().mul(xi.sub(w));
-
-    // println!("eval_l1: {}", eval_l1);
 
     let invser_arr_resp = inverse_array(
         den_h1,
@@ -349,12 +341,8 @@ pub fn compute_li_s0(
     for i in 0..8 {
         let coeff = ((i * 7) % 8);
         den2 = h0w8[0 + coeff];
-        // println!("den2: {}", den2);
         den3 = y.add(&q.sub(&h0w8[0 + (i)]));
-        // println!("den3: {}", den3);
-
         li_s0_inv[i] = den1.mul(&den2).mul(&den3);
-
     }
     li_s0_inv
 }
@@ -481,7 +469,6 @@ pub fn inverse_array(
     inv = acc.mul(_acc.last().unwrap().clone());
     acc = acc.mul(eval_l1.clone());
     *eval_l1 = inv;
-    // println!("herer eval_l1: {}", eval_l1);
 
     for i in (0..6).rev() {
         _acc.pop();
@@ -489,7 +476,6 @@ pub fn inverse_array(
         acc = acc.mul(local_li_s2_inv[i]);
         local_li_s2_inv[i] = inv;
     }
-    // println!("local_li_s2_inv_0: {}", local_li_s2_inv[0]);
 
     for i in (0..4).rev() {
         _acc.pop();
@@ -498,16 +484,12 @@ pub fn inverse_array(
         local_li_s1_inv[i] = inv;
     }
 
-    // println!("local_li_s1_inv_0: {}", local_li_s1_inv[0]);
-
     for i in (0..8).rev() {
         _acc.pop();
         inv = acc.mul(_acc.last().unwrap().clone());
         acc = acc.mul(local_li_s0_inv[i]);
         local_li_s0_inv[i] = inv;
     }
-
-    // println!("local_li_s0_inv_0: {}", local_li_s0_inv[0]);
 
     _acc.pop();
     inv = acc.mul(_acc.last().unwrap().clone());

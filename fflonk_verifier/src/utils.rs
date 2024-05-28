@@ -188,12 +188,6 @@ pub fn get_proof() -> Proof {
         "6378827379501409574366452872421073840754012879130221505294134572417254316105",
     ];
 
-    // for i in 0..pr.len() {
-    //     // println!("{}: {}", i, pr[i]);
-    //   let val = &U256::from_str(pr[i]).unwrap().to_string();
-    //   println!(" \"{},\" ", val);
-    // }
-
     let c1_x = <G1Point as AffineCurve>::BaseField::from_str(pr[0]).unwrap();
     let c1_y = <G1Point as AffineCurve>::BaseField::from_str(pr[1]).unwrap();
     let c1_affine = G1Projective::new(
